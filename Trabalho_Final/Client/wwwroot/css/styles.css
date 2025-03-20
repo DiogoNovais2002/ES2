@@ -118,6 +118,7 @@ html, body {
 /* Link "Criar Conta" */
 .create-account {
     text-align: center;
+    border-radius: 10px;
 }
 
 .create-account a {
