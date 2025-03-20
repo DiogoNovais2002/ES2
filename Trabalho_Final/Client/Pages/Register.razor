@@ -1,0 +1,85 @@
+@page "/register"
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Criar Conta</title>
+
+  <!-- Link para o mesmo CSS que você usa no Login -->
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- (Opcional) Font Awesome para ícones -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    integrity="sha512-d1vR0rZLIY8w8GWFN+j6gqDp0AK7jzXMeYQj+kU4j3iC1T9E6buQw3HL6RNfNeZTvC2PHFZ0L1EU6j2lW6nZow=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+</head>
+<body>
+  <!-- Mesmo container e card do layout de Login -->
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Imagem de topo (opcional trocar) -->
+      <div class="card-header"></div>
+
+      <div class="card-body">
+        <!-- Título em azul -->
+        <h2 style="color: #007bff;">Criar Conta</h2>
+
+        <form>
+          <!-- Campo Nome Completo -->
+          <div class="input-group">
+            <span class="input-icon">
+              <i class="fas fa-user"></i>
+            </span>
+            <input type="text" placeholder="Nome Completo" />
+          </div>
+
+          <!-- Campo E-mail -->
+          <div class="input-group">
+            <span class="input-icon">
+              <i class="fas fa-envelope"></i>
+            </span>
+            <input type="email" placeholder="E-mail" />
+          </div>
+
+          <!-- Campo Username -->
+          <div class="input-group">
+            <span class="input-icon">
+              <i class="fas fa-user"></i>
+            </span>
+            <input type="text" placeholder="Utilizador" />
+          </div>
+
+          <!-- Campo Senha -->
+          <div class="input-group">
+            <span class="input-icon">
+              <i class="fas fa-lock"></i>
+            </span>
+            <input type="password" placeholder="Senha" />
+          </div>
+
+          <!-- Campo Confirmar Senha -->
+          <div class="input-group">
+            <span class="input-icon">
+              <i class="fas fa-lock"></i>
+            </span>
+            <input type="password" placeholder="Confirmar Senha" />
+          </div>
+
+          <!-- Botão de Cadastrar (mesmo estilo do Entrar) -->
+          <button type="submit" class="login-button">Registar</button>
+
+          <!-- Link para voltar ao Login -->
+          <div class="create-account">
+            <a href="index.html">Voltar ao Login</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

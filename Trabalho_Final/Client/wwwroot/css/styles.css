@@ -1,0 +1,131 @@
+/* Ajuste do body */
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0; /* cor de fundo */
+}
+
+/* Container para centralizar o card */
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* Card de login */
+.login-card {
+    width: 400px;            /* ajuste se quiser maior/largo */
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+/* Topo com imagem de fundo */
+.card-header {
+    height: 200px;
+    background: url("../images/login.png") no-repeat center center;
+    background-size: cover;
+}
+
+/* Área do formulário */
+.card-body {
+    padding: 2rem;
+}
+
+.card-body h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #007bff;
+}
+
+/* Campos de texto arredondados, fundo branco, texto preto e borda */
+.input-group {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border: 1px solid #007bff;    /* Borda azul, mesma do botão */
+    border-radius: 30px;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+}
+
+/* Ícone à esquerda */
+.input-icon {
+    color: #333;
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+}
+
+/* Campo de texto */
+.input-group input {
+    flex: 1;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    color: #333;
+    font-size: 1rem;
+    padding: 0.5rem 0;
+}
+
+/* Placeholder em cinza */
+.input-group input::placeholder {
+    color: #999;
+}
+
+/* Opções (checkbox + "Esqueceu a senha?") */
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1rem 0;
+}
+
+.options label {
+    cursor: pointer;
+    color: #333;
+}
+
+.options a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.options a:hover {
+    text-decoration: underline;
+}
+
+/* Botão de Login */
+.login-button {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 1rem;
+}
+
+.login-button:hover {
+    background-color: #0056b3;
+}
+
+/* Link "Criar Conta" */
+.create-account {
+    text-align: center;
+}
+
+.create-account a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.create-account a:hover {
+    text-decoration: underline;
+}
