@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ES2.Data;
 
@@ -14,17 +13,37 @@ builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfi
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
+// Adicionar suporte a APIs
+builder.Services.AddControllers();
+
+// Adicionar Swagger
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
+    { 
+        Title = "API", 
+        Version = "v1",
+        Description = "TRABALHO PRATICO ES2"
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
+    // Ativar Swagger apenas em desenvolvimento
+    app.UseSwagger();
+    app.UseSwaggerUI(c => 
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Minha API v1");
+        c.RoutePrefix = string.Empty; // Swagger na raiz (ex.: https://localhost:5001/)
+    });
 }
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -40,6 +59,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
+// Mapeia os endpoints das APIs
+app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
