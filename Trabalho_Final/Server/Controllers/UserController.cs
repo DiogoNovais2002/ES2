@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;  // Adicione esta linha
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ES2.Data;
 using Server.DTO;
