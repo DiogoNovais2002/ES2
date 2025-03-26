@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Server.Models;
+using Server.DTO;
 
 namespace Server.Controllers
 {
@@ -50,9 +51,10 @@ namespace Server.Controllers
 
             var user = new User
             {
-                UserName = request.Email,
+                UserName = request.UserName ?? request.Email, 
                 Email = request.Email,
                 Name = request.Name,
+                PhoneNumber = request.PhoneNumber, 
                 UserType = request.UserType ?? "User",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -80,6 +82,8 @@ namespace Server.Controllers
         public string Name { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
+        public string? PhoneNumber { get; set; } 
+        public string? UserName { get; set; }
         public string? UserType { get; set; }
     }
 }
