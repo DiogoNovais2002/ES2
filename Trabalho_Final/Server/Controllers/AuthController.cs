@@ -35,7 +35,13 @@ namespace Server.Controllers
             var result = await _signInManager.PasswordSignInAsync(user.UserName, request.Password, isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
             {
-                return Ok(new { Message = "Login bem-sucedido", UserId = user.Id, UserName = user.UserName });
+                return Ok(new 
+                { 
+                    Message = "Login bem-sucedido", 
+                    UserId = user.Id, 
+                    UserName = user.UserName,
+                    UserType = user.UserType 
+                });
             }
 
             return Unauthorized("Senha inválida.");
@@ -51,11 +57,11 @@ namespace Server.Controllers
 
             var user = new User
             {
-                UserName = request.UserName ?? request.Email, 
+                UserName = request.UserName ?? request.Email,
                 Email = request.Email,
                 Name = request.Name,
-                PhoneNumber = request.PhoneNumber, 
-                UserType = request.UserType ?? "User",
+                PhoneNumber = request.PhoneNumber,
+                UserType = request.UserType ?? "Participante",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -63,7 +69,12 @@ namespace Server.Controllers
             var result = await _userManager.CreateAsync(user, request.Password);
             if (result.Succeeded)
             {
-                return Ok(new { Message = "Usuário registrado com sucesso. Você já pode fazer login.", UserId = user.Id });
+                return Ok(new 
+                { 
+                    Message = "Usuário registrado com sucesso. Você já pode fazer login.", 
+                    UserId = user.Id,
+                    UserType = user.UserType
+                });
             }
 
             var errors = result.Errors.Select(e => e.Description);
@@ -82,8 +93,8 @@ namespace Server.Controllers
         public string Name { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
-        public string? PhoneNumber { get; set; } 
-        public string? UserName { get; set; }
-        public string? UserType { get; set; }
+        public string? PhoneNumber { get; set; } // Opcional
+        public string? UserName { get; set; } // Opcional, usa Email se não fornecido
+        public string? UserType { get; set; } // Opcional, padrão "Participante"
     }
 }
