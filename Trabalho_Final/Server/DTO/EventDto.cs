@@ -2,25 +2,21 @@ namespace Server.DTO;
 
 public class EventDto
 {
-    public int id { get; set; }
+    public int Id { get; set; }
     
-    public int organizerid { get; set; }
+    public int OrganizerId { get; set; }
     
-    public string name  { get; set; }
+    public string Name { get; set; }
     
-    public string description { get; set; }
+    public string? Description { get; set; }
     
-    public DateTime eventdate  { get; set; }
+    public DateTime EventDate { get; set; }
     
-    public string locacion   { get; set; }
+    public string Location { get; set; }
     
-    public int capacity   { get; set; }
+    public int Capacity { get; set; }
     
-    public decimal price    { get; set; }
+    public decimal Price { get; set; }
     
-    public string category   { get; set; }
-    
-    public DateTime CreatedAt { get; set; }
-    
-    public DateTime UpdatedAt { get; set; }
+    public string? Category { get; set; }
 }

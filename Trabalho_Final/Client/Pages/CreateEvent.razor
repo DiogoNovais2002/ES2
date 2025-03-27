@@ -1,0 +1,87 @@
+@page "/create-event"
+@inject ApiService ApiService
+
+<h3>Criar Novo Evento</h3>
+
+@if (Sucesso)
+{
+    <div class="alert alert-success">Evento criado com sucesso!</div>
+}
+@if (Erro)
+{
+    <div class="alert alert-danger">Erro ao criar o evento.</div>
+}
+
+<EditForm Model="@NovoEvento" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label>Nome:</label>
+        <InputText @bind-Value="NovoEvento.Name" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Descrição:</label>
+        <InputTextArea @bind-Value="NovoEvento.Description" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Data:</label>
+        <InputDate @bind-Value="NovoEvento.EventDate" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Localização:</label>
+        <InputText @bind-Value="NovoEvento.Location" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Capacidade:</label>
+        <InputNumber @bind-Value="NovoEvento.Capacity" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Preço:</label>
+        <InputNumber @bind-Value="NovoEvento.Price" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Categoria:</label>
+        <InputText @bind-Value="NovoEvento.Category" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Criar Evento</button>
+</EditForm>
+
+@code {
+    private ApiService.EventDto NovoEvento = new();
+    private bool Sucesso = false;
+    private bool Erro = false;
+
+    protected override void OnInitialized()
+    {
+        // ID fixo ou vindo de login no futuro
+        NovoEvento.OrganizerId = 1;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        Sucesso = false;
+        Erro = false;
+
+        var resultado = await ApiService.CreateEventAsync(NovoEvento);
+        if (resultado)
+        {
+            Sucesso = true;
+            NovoEvento = new ApiService.EventDto
+            {
+                OrganizerId = 1 // reset após sucesso
+            };
+        }
+        else
+        {
+            Erro = true;
+        }
+    }
+}

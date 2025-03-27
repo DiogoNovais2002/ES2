@@ -5,8 +5,8 @@ using Server.DTO;
 
 namespace Server.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class EventController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -16,146 +16,80 @@ namespace Server.Controllers
             _context = context;
         }
 
-        /// <summary>
-        /// Retorna todos os eventos.
-        /// </summary>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetEventById(int id)
+        {
+            var eventEntity = await _context.Events
+                .Where(e => e.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (eventEntity == null)
+            {
+                return NotFound(new { message = "Event not found" });
+            }
+
+            var eventDto = new EventDto
+            {
+                Id = eventEntity.Id,
+                OrganizerId = eventEntity.OrganizerId,
+                Name = eventEntity.Name,
+                Description = eventEntity.Description,
+                EventDate = eventEntity.EventDate,
+                Location = eventEntity.Location,
+                Capacity = eventEntity.Capacity,
+                Price = eventEntity.Price,
+                Category = eventEntity.Category
+            };
+
+            return Ok(eventDto);
+        }
+
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EventDto>>> GetEvents()
+        public async Task<IActionResult> GetEvents()
         {
             var events = await _context.Events
                 .Select(e => new EventDto
                 {
-                    id = e.Id,
-                    organizerid = e.OrganizerId,
-                    name = e.Name,
-                    description = e.Description,
-                    eventdate = e.EventDate,
-                    locacion = e.Location,
-                    capacity = e.Capacity,
-                    price = e.Price,
-                    category = e.Category,
-                    CreatedAt = e.CreatedAt,
-                    UpdatedAt = e.UpdatedAt
+                    Id = e.Id,
+                    OrganizerId = e.OrganizerId,
+                    Name = e.Name,
+                    Description = e.Description,
+                    EventDate = e.EventDate,
+                    Location = e.Location,
+                    Capacity = e.Capacity,
+                    Price = e.Price,
+                    Category = e.Category
                 })
                 .ToListAsync();
 
             return Ok(events);
         }
 
-        /// <summary>
-        /// Retorna um evento por ID.
-        /// </summary>
-        [HttpGet("{id}")]
-        public async Task<ActionResult<EventDto>> GetEvent(int id)
-        {
-            var e = await _context.Events.FindAsync(id);
-
-            if (e == null)
-                return NotFound(new { message = "Evento não encontrado." });
-
-            var dto = new EventDto
-            {
-                id = e.Id,
-                organizerid = e.OrganizerId,
-                name = e.Name,
-                description = e.Description,
-                eventdate = e.EventDate,
-                locacion = e.Location,
-                capacity = e.Capacity,
-                price = e.Price,
-                category = e.Category,
-                CreatedAt = e.CreatedAt,
-                UpdatedAt = e.UpdatedAt
-            };
-
-            return Ok(dto);
-        }
-
-        /// <summary>
-        /// Cria um novo evento.
-        /// </summary>
         [HttpPost]
-        public async Task<IActionResult> CreateEvent([FromBody] EventDto dto)
+        public async Task<IActionResult> CreateEvent([FromBody] EventDto eventDto)
         {
-            // Verifica se o User (organizador) existe
-            var userExists = await _context.Users.AnyAsync(u => u.Id == dto.organizerid);
-            if (!userExists)
+            var eventEntity = new Event
             {
-                return BadRequest(new { message = "Organizador (User) não encontrado." });
-            }
-
-            var newEvent = new Event
-            {
-                OrganizerId = dto.organizerid,
-                Name = dto.name,
-                Description = dto.description,
-                EventDate = dto.eventdate,
-                Location = dto.locacion,
-                Capacity = dto.capacity,
-                Price = dto.price,
-                Category = dto.category,
+                OrganizerId = eventDto.OrganizerId,
+                Name = eventDto.Name,
+                Description = eventDto.Description,
+                EventDate = eventDto.EventDate,
+                Location = eventDto.Location,
+                Capacity = eventDto.Capacity,
+                Price = eventDto.Price,
+                Category = eventDto.Category,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
-            _context.Events.Add(newEvent);
+            _context.Events.Add(eventEntity);
             await _context.SaveChangesAsync();
 
-            dto.id = newEvent.Id;
-            dto.CreatedAt = newEvent.CreatedAt;
-            dto.UpdatedAt = newEvent.UpdatedAt;
-
-            return CreatedAtAction(nameof(GetEvent), new { id = newEvent.Id }, dto);
-        }
-
-
-        /// <summary>
-        /// Atualiza um evento existente.
-        /// </summary>
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEvent(int id, [FromBody] EventDto dto)
-        {
-            // Verifica se o evento existe
-            var e = await _context.Events.FindAsync(id);
-            if (e == null)
-                return NotFound(new { message = "Evento não encontrado." });
-
-            // Verifica se o organizador (User) existe
-            var userExists = await _context.Users.AnyAsync(u => u.Id == dto.organizerid);
-            if (!userExists)
-                return BadRequest(new { message = "Organizador (User) não encontrado." });
-
-            // Atualiza os dados
-            e.OrganizerId = dto.organizerid;
-            e.Name = dto.name;
-            e.Description = dto.description;
-            e.EventDate = dto.eventdate;
-            e.Location = dto.locacion;
-            e.Capacity = dto.capacity;
-            e.Price = dto.price;
-            e.Category = dto.category;
-            e.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-
-        /// <summary>
-        /// Elimina um evento.
-        /// </summary>
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEvent(int id)
-        {
-            var e = await _context.Events.FindAsync(id);
-            if (e == null)
-                return NotFound(new { message = "Evento não encontrado." });
-
-            _context.Events.Remove(e);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok(new
+            {
+                message = "Evento criado com sucesso!",
+                eventId = eventEntity.Id
+            });
         }
     }
 }
