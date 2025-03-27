@@ -1,5 +1,5 @@
 using System.Net.Http.Json;
-
+namespace Client.Services;
 
 public class ApiService
 {

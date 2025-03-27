@@ -5,8 +5,8 @@ using Server.DTO;
 
 namespace Server.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class EventController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
