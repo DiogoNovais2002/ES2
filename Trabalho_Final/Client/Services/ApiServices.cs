@@ -30,9 +30,20 @@ public class ApiService
     }
 
     // Criar um evento
-    public async Task<bool> CreateEventAsync(EventDto newEvent)
+    public async Task<int?> CreateEventAsync(EventDto newEvent)
     {
         var response = await _httpClient.PostAsJsonAsync("api/Event", newEvent);
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        var result = await response.Content.ReadFromJsonAsync<CreateEventResponse>();
+        return result?.eventId;
+    }
+    
+    public async Task<bool> CreateTicketAsync(EventTicketDto ticket)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/EventTicket", ticket);
         return response.IsSuccessStatusCode;
     }
 
@@ -52,5 +63,20 @@ public class ApiService
         public int Capacity { get; set; }
         public decimal Price { get; set; }
         public string Category { get; set; } = string.Empty;
+    }
+    
+    public class EventTicketDto
+    {
+        public int Id { get; set; }
+        public int EventId { get; set; }
+        public string TicketType { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public int QuantityAvailable { get; set; }
+    }
+    
+    private class CreateEventResponse
+    {
+        public string message { get; set; }
+        public int eventId { get; set; }
     }
 }

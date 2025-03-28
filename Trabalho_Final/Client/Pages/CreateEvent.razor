@@ -6,11 +6,11 @@
 
 @if (Sucesso)
 {
-    <div class="alert alert-success">Evento criado com sucesso!</div>
+    <div class="alert alert-success">Evento e bilhetes criados com sucesso!</div>
 }
 @if (Erro)
 {
-    <div class="alert alert-danger">Erro ao criar o evento.</div>
+    <div class="alert alert-danger">@MensagemErro</div>
 }
 
 <EditForm Model="@NovoEvento" OnValidSubmit="HandleValidSubmit">
@@ -33,6 +33,11 @@
     </div>
 
     <div class="form-group">
+        <label>Hora de Início:</label>
+        <InputText type="time" @bind-Value="HoraInicioString" class="form-control" />
+    </div>
+
+    <div class="form-group">
         <label>Localização:</label>
         <InputText @bind-Value="NovoEvento.Location" class="form-control" />
     </div>
@@ -43,7 +48,7 @@
     </div>
 
     <div class="form-group">
-        <label>Preço:</label>
+        <label>Preço Base:</label>
         <InputNumber @bind-Value="NovoEvento.Price" class="form-control" />
     </div>
 
@@ -52,50 +57,169 @@
         <InputText @bind-Value="NovoEvento.Category" class="form-control" />
     </div>
 
+    <hr />
+    <h4>Bilhetes</h4>
+
+    <div class="ticket-container">
+        @foreach (var ticket in Tickets)
+        {
+            <div class="ticket-card">
+                <div class="form-group">
+                    <label>Tipo de Bilhete:</label>
+                    <InputText @bind-Value="ticket.TicketType" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Preço:</label>
+                    <InputNumber @bind-Value="ticket.Price" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Quantidade:</label>
+                    <InputNumber @bind-Value="ticket.QuantityAvailable" class="form-control" />
+                </div>
+                <button type="button" class="btn btn-danger mt-2" @onclick="@(() => RemoverTicket(ticket))">Remover</button>
+            </div>
+        }
+    </div>
+
+    <button type="button" class="btn btn-secondary mb-3" @onclick="AdicionarTicket">+ Adicionar Bilhete</button>
+    <br />
     <button type="submit" class="btn btn-primary mt-3">Criar Evento</button>
 </EditForm>
 
+<style>
+    .ticket-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .ticket-card {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding: 1rem;
+        width: 280px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        background-color: #f9f9f9;
+    }
+
+    .ticket-card .form-group {
+        margin-bottom: 0.5rem;
+    }
+</style>
+
 @code {
     private ApiService.EventDto NovoEvento = new();
+    private List<TicketInput> Tickets = new();
+    private string HoraInicioString = "09:00";
+    private string MensagemErro = string.Empty;
     private bool Sucesso = false;
     private bool Erro = false;
 
     protected override void OnInitialized()
     {
-        // Inicializa valores padrão
         NovoEvento = new ApiService.EventDto
         {
             OrganizerId = 1,
-            EventDate = DateTime.Today // 👈 Define a data inicial como hoje
+            EventDate = DateTime.Today
         };
+        Tickets.Add(new TicketInput());
     }
 
     private async Task HandleValidSubmit()
+{
+    Sucesso = false;
+    Erro = false;
+    MensagemErro = string.Empty;
+
+    // ❌ 1. Verifica se existe pelo menos 1 bilhete
+    if (Tickets.Count == 0)
     {
-        Sucesso = false;
-        Erro = false;
+        Erro = true;
+        MensagemErro = "O evento deve ter pelo menos um tipo de bilhete.";
+        return;
+    }
 
-        // Apenas converte para UTC se a data for válida
-        if (NovoEvento.EventDate != DateTime.MinValue)
-        {
-            NovoEvento.EventDate = NovoEvento.EventDate.ToUniversalTime();
-        }
+    // ❌ 2. Verifica se algum tipo de bilhete está vazio
+    if (Tickets.Any(t => string.IsNullOrWhiteSpace(t.TicketType)))
+    {
+        Erro = true;
+        MensagemErro = "Todos os bilhetes devem ter um tipo especificado.";
+        return;
+    }
 
-        var resultado = await ApiService.CreateEventAsync(NovoEvento);
-        if (resultado)
-        {
-            Sucesso = true;
+    // ❌ 3. Soma das quantidades dos bilhetes deve ser IGUAL à capacidade
+    var totalBilhetes = Tickets.Sum(t => t.QuantityAvailable);
+    if (totalBilhetes != NovoEvento.Capacity)
+    {
+        Erro = true;
+        MensagemErro = $"A soma da quantidade dos bilhetes ({totalBilhetes}) deve ser igual à capacidade do evento ({NovoEvento.Capacity}).";
+        return;
+    }
 
-            // Reinicializa o formulário com a data de hoje
-            NovoEvento = new ApiService.EventDto
-            {
-                OrganizerId = 1,
-                EventDate = DateTime.Today
-            };
-        }
-        else
+    // ❌ 4. Validação da hora
+    if (!TimeSpan.TryParse(HoraInicioString, out var hora))
+    {
+        Erro = true;
+        MensagemErro = "Hora de início inválida.";
+        return;
+    }
+
+    try
+    {
+        var dataCompleta = NovoEvento.EventDate.Date + hora;
+        NovoEvento.EventDate = DateTime.SpecifyKind(dataCompleta, DateTimeKind.Utc);
+
+        var eventId = await ApiService.CreateEventAsync(NovoEvento);
+        if (eventId is null)
         {
             Erro = true;
+            MensagemErro = "Erro ao criar o evento.";
+            return;
         }
+
+        foreach (var ticket in Tickets)
+        {
+            var dto = new ApiService.EventTicketDto
+            {
+                EventId = eventId.Value,
+                TicketType = ticket.TicketType,
+                Price = ticket.Price,
+                QuantityAvailable = ticket.QuantityAvailable
+            };
+
+            await ApiService.CreateTicketAsync(dto);
+        }
+
+        Sucesso = true;
+        MensagemErro = string.Empty;
+        NovoEvento = new ApiService.EventDto { OrganizerId = 1, EventDate = DateTime.Today };
+        HoraInicioString = "09:00";
+        Tickets.Clear();
+        Tickets.Add(new TicketInput());
+    }
+    catch
+    {
+        Erro = true;
+        MensagemErro = "Ocorreu um erro ao criar o evento e/ou bilhetes.";
+    }
+}
+
+
+    private void AdicionarTicket()
+    {
+        Tickets.Add(new TicketInput());
+    }
+
+    private void RemoverTicket(TicketInput ticket)
+    {
+        Tickets.Remove(ticket);
+    }
+
+    private class TicketInput
+    {
+        public string TicketType { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public int QuantityAvailable { get; set; }
     }
 }

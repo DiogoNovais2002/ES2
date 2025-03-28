@@ -15,5 +15,6 @@ namespace ES2.Data
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public User? Organizer { get; set; }
+        
     }
 }
