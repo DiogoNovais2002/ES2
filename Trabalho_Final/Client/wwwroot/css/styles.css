@@ -1,36 +1,27 @@
-/* Ajuste do body */
-html, body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0; /* cor de fundo */
-}
+/* Estilo exclusivo da página de login */
 
-/* Container para centralizar o card */
 .login-container {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+    background-color: #f0f0f0;
 }
 
-/* Card de login */
 .login-card {
-    width: 400px;            /* ajuste se quiser maior/largo */
+    width: 400px;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     background-color: #fff;
 }
 
-/* Topo com imagem de fundo */
 .card-header {
     height: 200px;
     background: url("../images/login.png") no-repeat center center;
     background-size: cover;
 }
 
-/* Área do formulário */
 .card-body {
     padding: 2rem;
 }
@@ -41,25 +32,22 @@ html, body {
     color: #007bff;
 }
 
-/* Campos de texto arredondados, fundo branco, texto preto e borda */
 .input-group {
     display: flex;
     align-items: center;
     background-color: #fff;
-    border: 1px solid #007bff;    /* Borda azul, mesma do botão */
+    border: 1px solid #007bff;
     border-radius: 30px;
     margin-bottom: 1rem;
     padding: 0.5rem 1rem;
 }
 
-/* Ícone à esquerda */
 .input-icon {
     color: #333;
     margin-right: 0.5rem;
     font-size: 1.1rem;
 }
 
-/* Campo de texto */
 .input-group input {
     flex: 1;
     background-color: transparent;
@@ -70,12 +58,10 @@ html, body {
     padding: 0.5rem 0;
 }
 
-/* Placeholder em cinza */
 .input-group input::placeholder {
     color: #999;
 }
 
-/* Opções (checkbox + "Esqueceu a senha?") */
 .options {
     display: flex;
     justify-content: space-between;
@@ -98,7 +84,6 @@ html, body {
     text-decoration: underline;
 }
 
-/* Botão de Login */
 .login-button {
     width: 100%;
     padding: 0.8rem;
@@ -115,7 +100,6 @@ html, body {
     background-color: #0056b3;
 }
 
-/* Link "Criar Conta" */
 .create-account {
     text-align: center;
     border-radius: 10px;
