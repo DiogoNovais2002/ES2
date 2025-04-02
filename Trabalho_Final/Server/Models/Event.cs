@@ -1,5 +1,5 @@
 // Models/Event.cs
-namespace ES2.Data
+namespace Server.Models
 {
     public class Event
     {
