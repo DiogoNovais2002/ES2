@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ES2.Data;
+using Server.Data;
+using Server.Models;
 using Server.DTO;
 
 namespace Server.Controllers
@@ -68,21 +69,17 @@ namespace Server.Controllers
                 EventId = dto.EventId,
                 Name = dto.Name,
                 Description = dto.Description,
-                ActivityStartDate = dto.ActivityStartDate,
-                ActivityEndDate = dto.ActivityEndDate,
+                ActivityStartDate = DateTime.SpecifyKind(dto.ActivityStartDate, DateTimeKind.Utc),
+                ActivityEndDate = DateTime.SpecifyKind(dto.ActivityEndDate, DateTimeKind.Utc),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
             _context.Activities.Add(activity);
             await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                message = "Atividade criada com sucesso!",
-                activityId = activity.Id
-            });
+            return Ok();
         }
+
 
         // PUT: api/Activity/5
         [HttpPut("{id}")]

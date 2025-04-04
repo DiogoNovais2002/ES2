@@ -1,5 +1,5 @@
 // Models/Activity.cs
-namespace ES2.Data
+namespace Server.Models
 {
     public class Activity
     {

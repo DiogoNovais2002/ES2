@@ -29,13 +29,20 @@
     </div>
 
     <div class="form-group">
-        <label>Data:</label>
-        <InputDate @bind-Value="NovoEvento.EventDate" class="form-control" />
+        <label>Data de Início:</label>
+        <InputDate @bind-Value="EventStartDate" class="form-control" />
     </div>
-
     <div class="form-group">
         <label>Hora de Início:</label>
-        <InputText type="time" @bind-Value="HoraInicioString" class="form-control" />
+        <InputText type="time" @bind-Value="EventStartTime" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Data de Fim:</label>
+        <InputDate @bind-Value="EventEndDate" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Hora de Fim:</label>
+        <InputText type="time" @bind-Value="EventEndTime" class="form-control" />
     </div>
 
     <div class="form-group">
@@ -72,6 +79,10 @@
                     <label>Quantidade:</label>
                     <InputNumber @bind-Value="ticket.QuantityAvailable" class="form-control" />
                 </div>
+                <div class="form-group">
+                    <label>Beneficios:</label>
+                    <InputTextArea @bind-Value="ticket.Description" class="form-control" />
+                </div>
                 <button type="button" class="btn btn-danger mt-2" @onclick="() => RemoverTicket(ticket)">Remover</button>
             </div>
         }
@@ -81,35 +92,39 @@
     <!-- Atividades -->
     <hr />
     <h4>Atividades</h4>
-    @foreach (var activity in Activities)
-    {
-        <div class="ticket-card">
-            <div class="form-group">
-                <label>Nome:</label>
-                <InputText @bind-Value="activity.Name" class="form-control" />
+    <div class="ticket-container">
+        @foreach (var activity in Activities)
+        {
+            <div class="ticket-card">
+                <div class="form-group">
+                    <label>Nome:</label>
+                    <InputText @bind-Value="activity.Name" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Descrição:</label>
+                    <InputTextArea @bind-Value="activity.Description" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Data:</label>
+                    <InputDate @bind-Value="activity.StartDate" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Hora de Início:</label>
+                    <InputText type="time" @bind-Value="activity.StartTime" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Hora de Término:</label>
+                    <InputText type="time" @bind-Value="activity.EndTime" class="form-control" />
+                </div>
+                <button type="button" class="btn btn-danger mt-2" @onclick="() => RemoverActivity(activity)">Remover</button>
             </div>
-            <div class="form-group">
-                <label>Descrição:</label>
-                <InputTextArea @bind-Value="activity.Description" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label>Data:</label>
-                <InputDate @bind-Value="activity.StartDate" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label>Hora de Início:</label>
-                <InputText type="time" @bind-Value="activity.StartTime" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label>Hora de Término:</label>
-                <InputText type="time" @bind-Value="activity.EndTime" class="form-control" />
-            </div>
-            <button type="button" class="btn btn-danger mt-2" @onclick="() => RemoverActivity(activity)">Remover</button>
-        </div>
-    }
+        }
+    </div>
     <button type="button" class="btn btn-secondary mb-3" @onclick="AdicionarActivity">+ Adicionar Atividade</button>
 
-    <button type="submit" class="btn btn-primary mt-3">Criar Evento</button>
+    <div>
+        <button type="submit" class="btn btn-primary">Criar Evento</button>
+    </div>
 </EditForm>
 
 <style>
@@ -139,18 +154,18 @@
     private List<TicketInput> Tickets = new();
     private List<ActivityInput> Activities = new();
 
-    private string HoraInicioString = "09:00";
+    private DateTime EventStartDate = DateTime.Today;
+    private DateTime EventEndDate = DateTime.Today;
+    private string EventStartTime = "09:00";
+    private string EventEndTime = "18:00";
+
     private string MensagemErro = string.Empty;
     private bool Sucesso = false;
     private bool Erro = false;
 
     protected override void OnInitialized()
     {
-        NovoEvento = new ApiService.EventDto
-        {
-            OrganizerId = 1,
-            EventDate = DateTime.Today
-        };
+        NovoEvento = new ApiService.EventDto { OrganizerId = 1 };
         Tickets.Add(new TicketInput());
         Activities.Add(new ActivityInput());
     }
@@ -176,45 +191,62 @@
             return;
         }
 
-        if (!TimeSpan.TryParse(HoraInicioString, out var hora))
+        if (!TimeSpan.TryParse(EventStartTime, out var startHora) || !TimeSpan.TryParse(EventEndTime, out var endHora))
         {
             Erro = true;
-            MensagemErro = "Hora de início do evento inválida.";
+            MensagemErro = "Hora de início ou fim do evento inválida.";
             return;
         }
 
-        foreach (var a in Activities)
+        var dataHoraInicio = DateTime.SpecifyKind(EventStartDate.Date + startHora, DateTimeKind.Utc);
+        var dataHoraFim = DateTime.SpecifyKind(EventEndDate.Date + endHora, DateTimeKind.Utc);
+
+        if (dataHoraInicio >= dataHoraFim)
         {
-            if (string.IsNullOrWhiteSpace(a.Name) ||
-                !TimeSpan.TryParse(a.StartTime, out var hs) ||
-                !TimeSpan.TryParse(a.EndTime, out var he))
-            {
-                Erro = true;
-                MensagemErro = "Todas as atividades devem ter nome, hora de início e fim válidas.";
-                return;
-            }
+            Erro = true;
+            MensagemErro = "A data/hora de fim do evento deve ser posterior à de início.";
+            return;
+        }
 
-            if (a.StartDate.Date != NovoEvento.EventDate.Date)
-            {
-                Erro = true;
-                MensagemErro = "Atividades devem ocorrer na mesma data do evento.";
-                return;
-            }
+        NovoEvento.EventStartDate = dataHoraInicio;
+        NovoEvento.EventEndDate = dataHoraFim;
 
-            if ((a.StartDate + hs) >= (a.StartDate + he))
+        if (Activities.Any())
+        {
+            foreach (var a in Activities)
             {
-                Erro = true;
-                MensagemErro = "Atividade deve terminar após a hora de início.";
-                return;
+                if (string.IsNullOrWhiteSpace(a.Name) ||
+                    !TimeSpan.TryParse(a.StartTime, out var hs) ||
+                    !TimeSpan.TryParse(a.EndTime, out var he))
+                {
+                    Erro = true;
+                    MensagemErro = "Todas as atividades devem ter nome, hora de início e fim válidas.";
+                    return;
+                }
+
+                var atividadeInicio = a.StartDate.Date + hs;
+                var atividadeFim = a.StartDate.Date + he;
+
+                if (atividadeInicio < dataHoraInicio || atividadeFim > dataHoraFim)
+                {
+                    Erro = true;
+                    MensagemErro = "Atividades devem estar dentro do intervalo de data/hora do evento.";
+                    return;
+                }
+
+                if (atividadeInicio >= atividadeFim)
+                {
+                    Erro = true;
+                    MensagemErro = "Atividade deve terminar após a hora de início.";
+                    return;
+                }
             }
         }
 
+
         try
         {
-            var dataCompleta = NovoEvento.EventDate.Date + hora;
-            NovoEvento.EventDate = DateTime.SpecifyKind(dataCompleta, DateTimeKind.Utc);
             var eventId = await ApiService.CreateEventAsync(NovoEvento);
-
             if (eventId is null)
             {
                 Erro = true;
@@ -224,35 +256,53 @@
 
             foreach (var t in Tickets)
             {
-                await ApiService.CreateTicketAsync(new ApiService.EventTicketDto
+                var success = await ApiService.CreateTicketAsync(new ApiService.EventTicketDto
                 {
                     EventId = eventId.Value,
                     TicketType = t.TicketType,
                     Price = t.Price,
-                    QuantityAvailable = t.QuantityAvailable
+                    QuantityAvailable = t.QuantityAvailable,
+                    Description = t.Description
                 });
+
+                if (!success)
+                {
+                    Erro = true;
+                    MensagemErro = $"Erro ao criar o bilhete do tipo '{t.TicketType}'.";
+                    return;
+                }
             }
 
             foreach (var act in Activities)
             {
                 TimeSpan.TryParse(act.StartTime, out var hs);
                 TimeSpan.TryParse(act.EndTime, out var he);
-                await ApiService.CreateActivityAsync(new ApiService.ActivityDto
+
+                var success = await ApiService.CreateActivityAsync(new ApiService.ActivityDto
                 {
                     EventId = eventId.Value,
                     Name = act.Name,
                     Description = act.Description,
-                    ActivityStartDate = act.StartDate.Date + hs,
-                    ActivityEndDate = act.StartDate.Date + he,
+                    ActivityStartDate = DateTime.SpecifyKind(act.StartDate.Date + hs, DateTimeKind.Utc),
+                    ActivityEndDate = DateTime.SpecifyKind(act.StartDate.Date + he, DateTimeKind.Utc),
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 });
+
+                if (!success)
+                {
+                    Erro = true;
+                    MensagemErro = $"Erro ao criar a atividade '{act.Name}'.";
+                    return;
+                }
             }
 
             Sucesso = true;
             MensagemErro = string.Empty;
-            NovoEvento = new ApiService.EventDto { OrganizerId = 1, EventDate = DateTime.Today };
-            HoraInicioString = "09:00";
+            NovoEvento = new ApiService.EventDto { OrganizerId = 1 };
+            EventStartDate = EventEndDate = DateTime.Today;
+            EventStartTime = "09:00";
+            EventEndTime = "18:00";
             Tickets.Clear(); Tickets.Add(new TicketInput());
             Activities.Clear(); Activities.Add(new ActivityInput());
         }
@@ -273,6 +323,7 @@
         public string TicketType { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int QuantityAvailable { get; set; }
+        public string Description { get; set; } = string.Empty;
     }
 
     private class ActivityInput

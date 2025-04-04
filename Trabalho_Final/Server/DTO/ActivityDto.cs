@@ -1,5 +1,3 @@
-using ES2.Data;
-
 namespace Server.DTO;
 
 public class ActivityDto

@@ -67,12 +67,15 @@ public class ApiService
         public int OrganizerId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public DateTime EventDateStart { get; set; }
-        public DateTime EventDateEnd { get; set; }
+
+        public DateTime EventStartDate { get; set; }
+        public DateTime EventEndDate { get; set; }
+
         public string Location { get; set; } = string.Empty;
         public int Capacity { get; set; }
         public string Category { get; set; } = string.Empty;
     }
+
 
     
     public class EventTicketDto
@@ -82,6 +85,8 @@ public class ApiService
         public string TicketType { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int QuantityAvailable { get; set; }
+        
+        public string Description { get; set; } = string.Empty;
     }
     
     private class CreateEventResponse
