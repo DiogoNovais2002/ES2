@@ -1,0 +1,75 @@
+﻿@page "/Home_Organizador"
+@inject ApiService ApiService
+
+<div class="linha">
+    <h3>Gerir Eventos</h3>
+    <button class="btn btn-primary" @onclick="CriarEvento">Criar Novo Evento</button>
+</div>
+
+@if (EventoCriado)
+{
+    <p>Evento foi criado com sucesso!</p>
+}
+
+<h4 style="margin-top: 2rem">Lista Eventos</h4>
+
+@if (Eventos != null && Eventos.Any())
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Nome do Evento</th>
+            <th>Data</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var evento in Eventos)
+        {
+            <tr>
+                <td>@evento.Id</td>
+                <td>@evento.Name</td>
+                <td>@evento.EventDate.ToString("dd/MM/yyyy")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Ainda não há eventos.</p>
+}
+
+@code {
+    private bool EventoCriado = false;
+    private List<ApiService.EventDto> Eventos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Eventos = await ApiService.GetEventsAsync();
+    }
+
+    private void CriarEvento()
+    {
+        EventoCriado = true;
+    }
+}
+
+<style>
+    .linha {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+    table {
+        margin-top: 1rem;
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 8px 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+</style>
