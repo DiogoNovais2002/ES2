@@ -17,14 +17,14 @@ builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfi
 // Adicionar suporte a APIs
 builder.Services.AddControllers();
 
-// Configurar CORS para permitir chamadas do Blazor WebAssembly
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazor",
-        policy => policy.WithOrigins("http://localhost:5196") // Porta do Blazor
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials());
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
 });
 
 // Adicionar Swagger
@@ -62,8 +62,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Ativar CORS antes da autenticação
-app.UseCors("AllowBlazor");
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

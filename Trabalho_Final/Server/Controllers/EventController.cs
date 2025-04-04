@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Server.Data;
-using Server.DTO;
 using Server.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Server.DTO;
 
 namespace Server.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class EventController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -35,10 +35,10 @@ namespace Server.Controllers
                 OrganizerId = eventEntity.OrganizerId,
                 Name = eventEntity.Name,
                 Description = eventEntity.Description,
-                EventDate = eventEntity.EventDate,
+                EventStartDate = eventEntity.EventStartDate,
+                EventEndDate = eventEntity.EventEndDate,
                 Location = eventEntity.Location,
                 Capacity = eventEntity.Capacity,
-                Price = eventEntity.Price,
                 Category = eventEntity.Category
             };
 
@@ -55,10 +55,10 @@ namespace Server.Controllers
                     OrganizerId = e.OrganizerId,
                     Name = e.Name,
                     Description = e.Description,
-                    EventDate = e.EventDate,
+                    EventStartDate = e.EventStartDate,
+                    EventEndDate = e.EventEndDate,
                     Location = e.Location,
                     Capacity = e.Capacity,
-                    Price = e.Price,
                     Category = e.Category
                 })
                 .ToListAsync();
@@ -74,10 +74,10 @@ namespace Server.Controllers
                 OrganizerId = eventDto.OrganizerId,
                 Name = eventDto.Name,
                 Description = eventDto.Description,
-                EventDate = eventDto.EventDate,
+                EventStartDate = eventDto.EventStartDate,
+                EventEndDate = eventDto.EventEndDate,
                 Location = eventDto.Location,
                 Capacity = eventDto.Capacity,
-                Price = eventDto.Price,
                 Category = eventDto.Category,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -93,4 +93,5 @@ namespace Server.Controllers
             });
         }
     }
+
 }

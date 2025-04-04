@@ -4,6 +4,7 @@ using Server.Data;
 using Server.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250404104903_CorrigeCamposEventETicket")]
+    partial class CorrigeCamposEventETicket
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,13 +36,9 @@ namespace Server.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("ActivityEndDate")
+                    b.Property<DateTime>("ActivityDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("activityenddate");
-
-                    b.Property<DateTime>("ActivityStartDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("activitystartdate");
+                        .HasColumnName("activitydate");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()

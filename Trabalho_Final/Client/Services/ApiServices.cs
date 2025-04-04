@@ -1,5 +1,6 @@
-﻿using System.Net.Http.Json;
 
+namespace Client.Services;
+using System.Net.Http.Json;
 
 public class ApiService
 {
@@ -30,11 +31,31 @@ public class ApiService
     }
 
     // Criar um evento
-    public async Task<bool> CreateEventAsync(EventDto newEvent)
+    public async Task<int?> CreateEventAsync(EventDto newEvent)
     {
         var response = await _httpClient.PostAsJsonAsync("api/Event", newEvent);
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        var result = await response.Content.ReadFromJsonAsync<CreateEventResponse>();
+        return result?.eventId;
+    }
+    
+    // Criar os Tickets para o Evento
+    public async Task<bool> CreateTicketAsync(EventTicketDto ticket)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/EventTicket", ticket);
         return response.IsSuccessStatusCode;
     }
+    
+    // Criar as Atividades para o Evento
+    public async Task<bool> CreateActivityAsync(ActivityDto activity)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/Activity", activity);
+        return response.IsSuccessStatusCode;
+    }
+
 
     private class ApiResponse
     {
@@ -47,10 +68,42 @@ public class ApiService
         public int OrganizerId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public DateTime EventDate { get; set; }
+
+        public DateTime EventStartDate { get; set; }
+        public DateTime EventEndDate { get; set; }
+
         public string Location { get; set; } = string.Empty;
         public int Capacity { get; set; }
-        public decimal Price { get; set; }
         public string Category { get; set; } = string.Empty;
+    }
+
+
+    
+    public class EventTicketDto
+    {
+        public int Id { get; set; }
+        public int EventId { get; set; }
+        public string TicketType { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public int QuantityAvailable { get; set; }
+        
+        public string Description { get; set; } = string.Empty;
+    }
+    
+    private class CreateEventResponse
+    {
+        public string message { get; set; }
+        public int eventId { get; set; }
+    }
+    
+    public class ActivityDto
+    {
+        public int EventId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime ActivityStartDate { get; set; }
+        public DateTime ActivityEndDate { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }
