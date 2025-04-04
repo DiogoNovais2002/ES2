@@ -1,5 +1,6 @@
-using System.Net.Http.Json;
+
 namespace Client.Services;
+using System.Net.Http.Json;
 
 public class ApiService
 {
@@ -105,5 +106,4 @@ public class ApiService
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
-
 }

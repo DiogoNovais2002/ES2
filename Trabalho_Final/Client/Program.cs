@@ -7,8 +7,9 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Regista o HttpClient para chamadas à API
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5140/") }); // API!
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5140/") });
+builder.Services.AddScoped<ApiService>();
+
 
 
 // Regista o ApiService como injetável

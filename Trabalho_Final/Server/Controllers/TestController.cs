@@ -9,7 +9,7 @@ namespace Server.Controllers
         [HttpGet("hello")]
         public IActionResult GetHello()
         {
-            return Ok("Hello, Swagger!");
+            return Ok(new { message = "Hello, Swagger!" });
         }
     }
 }
