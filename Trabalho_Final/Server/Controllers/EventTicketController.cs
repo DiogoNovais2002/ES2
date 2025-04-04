@@ -27,6 +27,7 @@ public class EventTicketController : ControllerBase
                 TicketType = t.TicketType,
                 Price = t.Price,
                 QuantityAvailable = t.QuantityAvailable,
+                Description = t.Description,
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt
             })
@@ -45,6 +46,7 @@ public class EventTicketController : ControllerBase
             TicketType = dto.TicketType,
             Price = dto.Price,
             QuantityAvailable = dto.QuantityAvailable,
+            Description = dto.Description,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

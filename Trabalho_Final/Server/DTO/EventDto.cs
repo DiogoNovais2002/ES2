@@ -10,13 +10,13 @@ public class EventDto
     
     public string? Description { get; set; }
     
-    public DateTime EventDate { get; set; }
+    public DateTime EventStartDate { get; set; }
+    
+    public DateTime EventEndDate { get; set; }
     
     public string Location { get; set; }
     
     public int Capacity { get; set; }
-    
-    public decimal Price { get; set; }
     
     public string? Category { get; set; }
 }

@@ -41,10 +41,10 @@ namespace ES2.Data
             builder.Entity<Event>().Property(e => e.OrganizerId).HasColumnName("organizerid");
             builder.Entity<Event>().Property(e => e.Name).HasColumnName("name");
             builder.Entity<Event>().Property(e => e.Description).HasColumnName("description");
-            builder.Entity<Event>().Property(e => e.EventDate).HasColumnName("eventdate");
+            builder.Entity<Event>().Property(e => e.EventStartDate).HasColumnName("eventstartdate");
+            builder.Entity<Event>().Property(e => e.EventEndDate).HasColumnName("eventenddate");
             builder.Entity<Event>().Property(e => e.Location).HasColumnName("location");
             builder.Entity<Event>().Property(e => e.Capacity).HasColumnName("capacity");
-            builder.Entity<Event>().Property(e => e.Price).HasColumnName("price");
             builder.Entity<Event>().Property(e => e.Category).HasColumnName("category");
             builder.Entity<Event>().Property(e => e.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("NOW()");
             builder.Entity<Event>().Property(e => e.UpdatedAt).HasColumnName("updatedat").HasDefaultValueSql("NOW()");
@@ -56,6 +56,7 @@ namespace ES2.Data
             builder.Entity<EventTicket>().Property(et => et.TicketType).HasColumnName("tickettype");
             builder.Entity<EventTicket>().Property(et => et.Price).HasColumnName("price");
             builder.Entity<EventTicket>().Property(et => et.QuantityAvailable).HasColumnName("quantityavailable");
+            builder.Entity<EventTicket>().Property(et => et.Description).HasColumnName("description");
             builder.Entity<EventTicket>().Property(et => et.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("NOW()");
             builder.Entity<EventTicket>().Property(et => et.UpdatedAt).HasColumnName("updatedat").HasDefaultValueSql("NOW()");
             builder.Entity<EventTicket>().HasOne(et => et.Event).WithMany().HasForeignKey(et => et.EventId).OnDelete(DeleteBehavior.Cascade);
@@ -65,7 +66,8 @@ namespace ES2.Data
             builder.Entity<Activity>().Property(a => a.EventId).HasColumnName("eventid");
             builder.Entity<Activity>().Property(a => a.Name).HasColumnName("name");
             builder.Entity<Activity>().Property(a => a.Description).HasColumnName("description");
-            builder.Entity<Activity>().Property(a => a.ActivityDate).HasColumnName("activitydate");
+            builder.Entity<Activity>().Property(a => a.ActivityStartDate).HasColumnName("activitystartdate");
+            builder.Entity<Activity>().Property(a => a.ActivityEndDate).HasColumnName("activityenddate");
             builder.Entity<Activity>().Property(a => a.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("NOW()");
             builder.Entity<Activity>().Property(a => a.UpdatedAt).HasColumnName("updatedat").HasDefaultValueSql("NOW()");
             builder.Entity<Activity>().HasOne(a => a.Event).WithMany().HasForeignKey(a => a.EventId).OnDelete(DeleteBehavior.Cascade);
