@@ -1,4 +1,5 @@
 @page "/login"
+@inject HttpClient Http
 
 <div class="login-container">
     <div class="login-card">
@@ -6,19 +7,22 @@
 
         <div class="card-body">
             <h2>Login</h2>
-            <form>
+            <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
                 <div class="input-group">
                     <span class="input-icon">
                         <i class="fas fa-user"></i>
                     </span>
-                    <input type="text" placeholder="Username" />
+                    <InputText @bind-Value="loginModel.Email" class="form-control" placeholder="Email" />
                 </div>
 
                 <div class="input-group">
                     <span class="input-icon">
                         <i class="fas fa-lock"></i>
                     </span>
-                    <input type="password" placeholder="Password" />
+                    <InputText @bind-Value="loginModel.Password" class="form-control" type="password" placeholder="Password" />
                 </div>
 
                 <div class="options">
@@ -34,7 +38,58 @@
                 <div class="create-account">
                     <a href="#">Criar Conta</a>
                 </div>
-            </form>
+            </EditForm>
+
+            <!-- Mensagem de erro se o login falhar -->
+            @if (loginError != null)
+            {
+                <div class="alert alert-danger">
+                    @loginError
+                </div>
+            }
         </div>
     </div>
 </div>
+
+@code {
+    private LoginRequest loginModel = new();
+    private string? loginError;  // Para exibir mensagens de erro
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("http://localhost:5000/api/auth/login", loginModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<LoginResult>();
+                // Se o login for bem-sucedido, você pode armazenar o ID do usuário ou redirecionar
+                Console.WriteLine($"Login bem-sucedido! ID do usuário: {result.UserId}");
+
+                // Redirecionar para a página principal ou dashboard após login
+                // Example: NavigationManager.NavigateTo("/dashboard");
+            }
+            else
+            {
+                loginError = "Email ou senha inválidos."; // Mensagem de erro se o login falhar
+            }
+        }
+        catch (Exception ex)
+        {
+            loginError = $"Erro ao tentar conectar: {ex.Message}";
+        }
+    }
+
+    public class LoginRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class LoginResult
+    {
+        public string Message { get; set; }
+        public int UserId { get; set; }
+    }
+}
