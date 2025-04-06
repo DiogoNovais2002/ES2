@@ -1,5 +1,6 @@
 @page "/login"
 @inject HttpClient Http
+@inject NavigationManager NavigationManager  
 
 <div class="login-container">
     <div class="login-card">
@@ -59,7 +60,8 @@
     {
         try
         {
-            var response = await Http.PostAsJsonAsync("http://localhost:5000/api/auth/login", loginModel);
+            // Envia a requisição POST para a API do backend
+            var response = await Http.PostAsJsonAsync("http://localhost:5140/api/auth/login", loginModel);  <!-- URL do Backend -->
 
             if (response.IsSuccessStatusCode)
             {
@@ -68,7 +70,7 @@
                 Console.WriteLine($"Login bem-sucedido! ID do usuário: {result.UserId}");
 
                 // Redirecionar para a página principal ou dashboard após login
-                // Example: NavigationManager.NavigateTo("/dashboard");
+                NavigationManager.NavigateTo("/dashboard");  // Redireciona para a página de dashboard (ajuste conforme necessário)
             }
             else
             {

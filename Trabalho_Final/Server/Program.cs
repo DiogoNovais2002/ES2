@@ -64,7 +64,7 @@ app.UseStaticFiles();  // Servir arquivos estáticos (se houver)
 app.UseRouting();  // Configuração do roteamento
 
 // Ativar CORS antes da autenticação (permitir chamadas do frontend)
-app.UseCors("AllowBlazor");
+app.UseCors("AllowBlazor");  // Aplique a política de CORS aqui
 
 app.UseAuthentication();  // Habilitar autenticação com Identity
 app.UseAuthorization();  // Habilitar autorização
