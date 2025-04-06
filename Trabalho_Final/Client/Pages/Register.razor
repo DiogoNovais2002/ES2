@@ -1,85 +1,122 @@
 @page "/register"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
 
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <title>Criar Conta</title>
+<div class="login-container">
+  <div class="login-card">
+    <div class="card-header"></div>
 
-  <!-- Link para o mesmo CSS que você usa no Login -->
-  <link rel="stylesheet" href="css/styles.css" />
+    <div class="card-body">
+      <h2 style="color: #007bff;">Criar Conta</h2>
 
-  <!-- (Opcional) Font Awesome para ícones -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-    integrity="sha512-d1vR0rZLIY8w8GWFN+j6gqDp0AK7jzXMeYQj+kU4j3iC1T9E6buQw3HL6RNfNeZTvC2PHFZ0L1EU6j2lW6nZow=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
-</head>
-<body>
-  <!-- Mesmo container e card do layout de Login -->
-  <div class="login-container">
-    <div class="login-card">
-      <!-- Imagem de topo (opcional trocar) -->
-      <div class="card-header"></div>
+      <EditForm Model="registerModel" OnValidSubmit="HandleRegister">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-      <div class="card-body">
-        <!-- Título em azul -->
-        <h2 style="color: #007bff;">Criar Conta</h2>
+        <!-- Campo Nome Completo -->
+        <div class="input-group">
+          <span class="input-icon">
+            <i class="fas fa-user"></i>
+          </span>
+          <InputText @bind-Value="registerModel.Name" class="form-control" placeholder="Nome Completo" />
+        </div>
 
-        <form>
-          <!-- Campo Nome Completo -->
-          <div class="input-group">
-            <span class="input-icon">
-              <i class="fas fa-user"></i>
-            </span>
-            <input type="text" placeholder="Nome Completo" />
-          </div>
+        <!-- Campo E-mail -->
+        <div class="input-group">
+          <span class="input-icon">
+            <i class="fas fa-envelope"></i>
+          </span>
+          <InputText @bind-Value="registerModel.Email" class="form-control" placeholder="E-mail" />
+        </div>
 
-          <!-- Campo E-mail -->
-          <div class="input-group">
-            <span class="input-icon">
-              <i class="fas fa-envelope"></i>
-            </span>
-            <input type="email" placeholder="E-mail" />
-          </div>
+        <!-- Campo Username -->
+        <div class="input-group">
+          <span class="input-icon">
+            <i class="fas fa-user"></i>
+          </span>
+          <InputText @bind-Value="registerModel.UserName" class="form-control" placeholder="Utilizador" />
+        </div>
 
-          <!-- Campo Username -->
-          <div class="input-group">
-            <span class="input-icon">
-              <i class="fas fa-user"></i>
-            </span>
-            <input type="text" placeholder="Utilizador" />
-          </div>
+        <!-- Campo Senha -->
+        <div class="input-group">
+          <span class="input-icon">
+            <i class="fas fa-lock"></i>
+          </span>
+          <InputText @bind-Value="registerModel.Password" class="form-control" type="password" placeholder="Senha" />
+        </div>
 
-          <!-- Campo Senha -->
-          <div class="input-group">
-            <span class="input-icon">
-              <i class="fas fa-lock"></i>
-            </span>
-            <input type="password" placeholder="Senha" />
-          </div>
+        <!-- Campo Confirmar Senha -->
+        <div class="input-group">
+          <span class="input-icon">
+            <i class="fas fa-lock"></i>
+          </span>
+          <InputText @bind-Value="registerModel.ConfirmPassword" class="form-control" type="password" placeholder="Confirmar Senha" />
+        </div>
 
-          <!-- Campo Confirmar Senha -->
-          <div class="input-group">
-            <span class="input-icon">
-              <i class="fas fa-lock"></i>
-            </span>
-            <input type="password" placeholder="Confirmar Senha" />
-          </div>
+        <button type="submit" class="login-button">Registar</button>
 
-          <!-- Botão de Cadastrar (mesmo estilo do Entrar) -->
-          <button type="submit" class="login-button">Registar</button>
+        <!-- Link para voltar ao Login -->
+        <div class="create-account">
+          <a href="login">Voltar ao Login</a>
+        </div>
+      </EditForm>
 
-          <!-- Link para voltar ao Login -->
-          <div class="create-account">
-            <a href="index.html">Voltar ao Login</a>
-          </div>
-        </form>
-      </div>
+      @if (errorMessage != null)
+      {
+        <div class="alert alert-danger">
+          @errorMessage
+        </div>
+      }
+
+      @if (successMessage != null)
+      {
+        <div class="alert alert-success">
+          @successMessage
+        </div>
+      }
     </div>
   </div>
-</body>
-</html>
+</div>
+
+@code {
+    private RegisterRequest registerModel = new();
+    private string? errorMessage;
+    private string? successMessage;
+
+    private async Task HandleRegister()
+    {
+        try
+        {
+            // Enviar dados para o backend via POST
+            var response = await Http.PostAsJsonAsync("http://localhost:5140/api/auth/register", registerModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Usuário registrado com sucesso. Você pode agora fazer login.";
+                errorMessage = null;
+
+                // Redirecionar para a página de login após o registro bem-sucedido
+                NavigationManager.NavigateTo("/login");
+            }
+            else
+            {
+                errorMessage = "Erro ao registrar o usuário. Verifique os dados e tente novamente.";
+                successMessage = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao tentar conectar: {ex.Message}";
+            successMessage = null;
+        }
+    }
+
+    public class RegisterRequest
+    {
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string UserName { get; set; }
+        public string Password { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+}
