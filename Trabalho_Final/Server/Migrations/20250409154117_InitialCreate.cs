@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-
 #nullable disable
 
 namespace Server.Migrations
@@ -190,10 +189,10 @@ namespace Server.Migrations
                     organizerid = table.Column<int>(type: "integer", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
-                    eventdate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    eventstartdate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    eventenddate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     location = table.Column<string>(type: "text", nullable: false),
                     capacity = table.Column<int>(type: "integer", nullable: false),
-                    price = table.Column<decimal>(type: "numeric", nullable: false),
                     category = table.Column<string>(type: "text", nullable: true),
                     createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
                     updatedat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
@@ -244,7 +243,8 @@ namespace Server.Migrations
                     eventid = table.Column<int>(type: "integer", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
-                    activitydate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    activitystartdate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    activityenddate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
                     updatedat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
                 },
@@ -271,6 +271,7 @@ namespace Server.Migrations
                     tickettype = table.Column<string>(type: "text", nullable: false),
                     price = table.Column<decimal>(type: "numeric", nullable: false),
                     quantityavailable = table.Column<int>(type: "integer", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: false),
                     createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
                     updatedat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
                 },
