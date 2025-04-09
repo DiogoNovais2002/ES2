@@ -1,0 +1,93 @@
+@page "/Home_Participante"
+@using Client.Services
+@inject ApiService ApiService
+
+<h3>Lista de Eventos</h3>
+
+@if (Eventos != null && Eventos.Any())
+{
+<div class="event-container">
+    @foreach (var evento in Eventos)
+    {
+    <div class="event-card">
+        <div class="event-header">
+            <h4>@evento.Name</h4>
+        </div>
+        <div class="event-body">
+            <p><strong>Data:</strong> @evento.EventStartDate.ToString("dd/MM/yyyy")</p>
+            <p><strong>Descrição:</strong> @evento.Description</p>
+        </div>
+        <div class="event-footer">
+            <button class="btn btn-primary" @onclick="() => HandleButtonClick(evento.Id)">Participar</button>
+        </div>
+    </div>
+    }
+</div>
+}
+else
+{
+<p>Ainda não há eventos.</p>
+}
+
+@code {
+private List<ApiService.EventDto> Eventos = new();
+
+protected override async Task OnInitializedAsync()
+{
+Eventos = await ApiService.GetEventsAsync();
+}
+
+private void HandleButtonClick(int eventId)
+{
+Console.WriteLine($"Botão clicado para evento ID: {eventId}");
+}
+}
+
+<style>
+    .event-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    .event-card {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 250px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 250px;
+        overflow: hidden;
+    }
+    .event-header {
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        width: 100%;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        box-sizing: border-box;
+    }
+    .event-card h4 {
+        margin: 0;
+    }
+    .event-body {
+        padding: 20px;
+    }
+    .event-footer {
+        margin-bottom: 20px;
+    }
+    .btn {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+    }
+    .btn:hover {
+        background-color: #0056b3;
+    }
+</style>
