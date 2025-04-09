@@ -1,4 +1,5 @@
 ﻿@page "/Home_Organizador"
+@using Client.Services
 @inject ApiService ApiService
 
 <div class="linha">
@@ -29,7 +30,8 @@
             <tr>
                 <td>@evento.Id</td>
                 <td>@evento.Name</td>
-                <td>@evento.EventDate.ToString("dd/MM/yyyy")</td>
+                <td>@evento.EventStartDate.ToString("dd/MM/yyyy")</td>
+
             </tr>
         }
         </tbody>

@@ -75,6 +75,7 @@ public class ApiService
         public string Location { get; set; } = string.Empty;
         public int Capacity { get; set; }
         public string Category { get; set; } = string.Empty;
+        public object EventDate { get; set; }
     }
 
 
