@@ -13,7 +13,7 @@
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <!-- Campo Nome Completo -->
+        
         <div class="input-group">
           <span class="input-icon">
             <i class="fas fa-user"></i>
@@ -37,20 +37,30 @@
           <InputText @bind-Value="registerModel.UserName" class="form-control" placeholder="Utilizador" />
         </div>
 
-        <!-- Campo Senha -->
+
         <div class="input-group">
-          <span class="input-icon">
-            <i class="fas fa-lock"></i>
-          </span>
-          <InputText @bind-Value="registerModel.Password" class="form-control" type="password" placeholder="Senha" />
+                    <span class="input-icon">
+                        <i class="fas fa-lock"></i>
+                    </span>
+          <InputText @bind-Value="registerModel.Password" class="form-control"
+                     type="@(_showPassword ? "text" : "password")"
+                     placeholder="Password"/>
+          <button type="button" class="toggle-password" @onclick="TogglePasswordVisibility">
+            <i class="fas @(_showPassword ? "fa-eye-slash" : "fa-eye")"></i>
+          </button>
         </div>
 
-        <!-- Campo Confirmar Senha -->
+
         <div class="input-group">
-          <span class="input-icon">
-            <i class="fas fa-lock"></i>
-          </span>
-          <InputText @bind-Value="registerModel.ConfirmPassword" class="form-control" type="password" placeholder="Confirmar Senha" />
+                    <span class="input-icon">
+                        <i class="fas fa-lock"></i>
+                    </span>
+          <InputText @bind-Value="registerModel.ConfirmPassword" class="form-control"
+                     type="@(_showPassword ? "text" : "password")"
+                     placeholder="Password"/>
+          <button type="button" class="toggle-password" @onclick="TogglePasswordVisibility">
+            <i class="fas @(_showPassword ? "fa-eye-slash" : "fa-eye")"></i>
+          </button>
         </div>
 
         <button type="submit" class="login-button">Registar</button>
@@ -87,7 +97,7 @@
     {
         try
         {
-            // Enviar dados para o backend via POST
+            
             var response = await Http.PostAsJsonAsync("http://localhost:5140/api/auth/register", registerModel);
 
             if (response.IsSuccessStatusCode)
@@ -95,7 +105,7 @@
                 successMessage = "Usuário registrado com sucesso. Você pode agora fazer login.";
                 errorMessage = null;
 
-                // Redirecionar para a página de login após o registro bem-sucedido
+                
                 NavigationManager.NavigateTo("/login");
             }
             else
@@ -119,4 +129,12 @@
         public string Password { get; set; }
         public string ConfirmPassword { get; set; }
     }
+    
+    private bool _showPassword = false;
+
+    private void TogglePasswordVisibility()
+    {
+      _showPassword = !_showPassword;
+    }
+
 }

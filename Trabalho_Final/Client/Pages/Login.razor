@@ -3,32 +3,39 @@
 @inject NavigationManager NavigationManager  
 
 <div class="login-container">
+    
     <div class="login-card">
         <div class="card-header"></div>
 
         <div class="card-body">
             <h2>Login</h2>
             <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
+                <DataAnnotationsValidator/>
+                <ValidationSummary/>
 
                 <div class="input-group">
                     <span class="input-icon">
                         <i class="fas fa-user"></i>
                     </span>
-                    <InputText @bind-Value="loginModel.Email" class="form-control" placeholder="Email" />
+                    <InputText @bind-Value="loginModel.Email" class="form-control" placeholder="Email"/>
                 </div>
 
                 <div class="input-group">
                     <span class="input-icon">
                         <i class="fas fa-lock"></i>
                     </span>
-                    <InputText @bind-Value="loginModel.Password" class="form-control" type="password" placeholder="Password" />
+                    <InputText @bind-Value="loginModel.Password" class="form-control"
+                               type="@(_showPassword ? "text" : "password")"
+                               placeholder="Password"/>
+                    <button type="button" class="toggle-password" @onclick="TogglePasswordVisibility">
+                        <i class="fas @(_showPassword ? "fa-eye-slash" : "fa-eye")"></i>
+                    </button>
                 </div>
+
 
                 <div class="options">
                     <div>
-                        <input type="checkbox" id="remember" />
+                        <input type="checkbox" id="remember"/>
                         <label for="remember">Lembrar-me</label>
                     </div>
                     <a href="#">Esqueceu a senha?</a>
@@ -37,11 +44,11 @@
                 <button type="submit" class="login-button">Entrar</button>
 
                 <div class="create-account">
-                    <a href="#">Criar Conta</a>
+                    <a href="/register">Criar Conta</a>
                 </div>
             </EditForm>
 
-            <!-- Mensagem de erro se o login falhar -->
+
             @if (loginError != null)
             {
                 <div class="alert alert-danger">
@@ -54,27 +61,26 @@
 
 @code {
     private LoginRequest loginModel = new();
-    private string? loginError;  // Para exibir mensagens de erro
+    private string? loginError;
 
     private async Task HandleLogin()
     {
         try
         {
-            // Envia a requisição POST para a API do backend
-            var response = await Http.PostAsJsonAsync("http://localhost:5140/api/auth/login", loginModel);  <!-- URL do Backend -->
+            var response = await Http.PostAsJsonAsync("http://localhost:5140/api/auth/login", loginModel);
 
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<LoginResult>();
-                // Se o login for bem-sucedido, você pode armazenar o ID do usuário ou redirecionar
+
                 Console.WriteLine($"Login bem-sucedido! ID do usuário: {result.UserId}");
 
-                // Redirecionar para a página principal ou dashboard após login
-                NavigationManager.NavigateTo("/dashboard");  // Redireciona para a página de dashboard (ajuste conforme necessário)
+
+                NavigationManager.NavigateTo("/Home_Participante");
             }
             else
             {
-                loginError = "Email ou senha inválidos."; // Mensagem de erro se o login falhar
+                loginError = "Email ou senha inválidos.";
             }
         }
         catch (Exception ex)
@@ -94,4 +100,13 @@
         public string Message { get; set; }
         public int UserId { get; set; }
     }
+    private bool _showPassword = false;
+
+    private void TogglePasswordVisibility()
+    {
+        _showPassword = !_showPassword;
+    }
+    
 }
+
+
