@@ -3,6 +3,7 @@ using Server.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Server.DTO;
+using Server.Models;
 
 namespace Server.Controllers
 {
