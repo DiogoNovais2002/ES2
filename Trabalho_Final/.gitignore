@@ -263,3 +263,6 @@ __pycache__/
 #Ligaçao a base dados
 Server/appsettings*.json
 Server/Properties/launchSettings.json
+
+# Entity Framework Migrations
+Server/Migrations/
