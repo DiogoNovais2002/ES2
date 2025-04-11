@@ -4,7 +4,7 @@
 
 <div class="linha">
     <h3>Gerir Eventos</h3>
-    <button class="btn btn-primary" @onclick="CriarEvento" href="/Create-Event">Criar Novo Evento</button>
+    <NavLink class="btn btn-primary" href="/Create-Event">Criar Novo Evento</NavLink>
 </div>
 
 @if (EventoCriado)
@@ -51,10 +51,7 @@ else
         Eventos = await ApiService.GetEventsAsync();
     }
 
-    private void CriarEvento()
-    {
-        EventoCriado = true;
-    }
+    
 }
 
 <style>
