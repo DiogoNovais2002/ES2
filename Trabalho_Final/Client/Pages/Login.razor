@@ -75,8 +75,18 @@
 
                 Console.WriteLine($"Login bem-sucedido! ID do usuário: {result.UserId}");
 
-
-                NavigationManager.NavigateTo("/Home_Participante");
+                if (result.userType == "Organizador")
+                {
+                    NavigationManager.NavigateTo("/Home_Organizador");
+                }
+                else if (result.userType == "Participante")
+                {
+                    NavigationManager.NavigateTo("/Home_Participante");
+                }
+                else
+                {
+                    loginError = "Tipo de utilizador desconhecido.";
+                }
             }
             else
             {
@@ -89,16 +99,19 @@
         }
     }
 
+
     public class LoginRequest
     {
         public string Email { get; set; }
         public string Password { get; set; }
+       
     }
 
     public class LoginResult
     {
         public string Message { get; set; }
         public int UserId { get; set; }
+        public string userType { get; set; }
     }
     private bool _showPassword = false;
 
@@ -106,7 +119,6 @@
     {
         _showPassword = !_showPassword;
     }
-    
 }
 
 
