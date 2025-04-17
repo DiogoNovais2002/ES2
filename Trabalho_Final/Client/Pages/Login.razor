@@ -1,6 +1,9 @@
 @page "/login"
 @inject HttpClient Http
-@inject NavigationManager NavigationManager  
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+
 
 <div class="login-container">
     
@@ -74,6 +77,9 @@
                 var result = await response.Content.ReadFromJsonAsync<LoginResult>();
 
                 Console.WriteLine($"Login bem-sucedido! ID do usuário: {result.UserId}");
+                
+                await JS.InvokeVoidAsync("localStorage.setItem", "userType", result.userType);
+                await JS.InvokeVoidAsync("localStorage.setItem", "userId", result.UserId.ToString());
 
                 if (result.userType == "Organizador")
                 {
