@@ -23,6 +23,21 @@ public class ApiService
     {
         return await _httpClient.GetFromJsonAsync<List<EventDto>>("api/Event") ?? new List<EventDto>();
     }
+    
+    public async Task<List<string>> GetEventCategoriesAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<List<string>>("api/Event/categories");
+    }
+    
+    public async Task<List<string>> GetLocalidadesAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<List<string>>("api/Event/localidades");
+    }
+    
+    public async Task<List<string>> GetDataAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<List<string>>("api/Event/datas");
+    }
 
     // Obter um evento específico por ID
     public async Task<EventDto?> GetEventByIdAsync(int id)
@@ -107,4 +122,6 @@ public class ApiService
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
+    
+    
 }

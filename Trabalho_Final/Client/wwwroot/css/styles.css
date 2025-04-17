@@ -125,6 +125,7 @@
 }
 
 .event-container {
+    margin-top: 50px;
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
@@ -170,4 +171,24 @@
 }
 .btn:hover {
     background-color: #0056b3;
+}
+.search-bar {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-bar input,
+.search-bar select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.Combobox-large{
+    width: 200px;
+    height: 40px;
+    font-size: 1rem;
+    padding: 5px;
 }

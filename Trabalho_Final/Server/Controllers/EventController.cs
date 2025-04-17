@@ -66,6 +66,42 @@ namespace Server.Controllers
 
             return Ok(events);
         }
+        
+        [HttpGet("categories")]
+        public async Task<ActionResult<List<string>>> GetCategories()
+        {
+            var categories = await _context.Events
+                .Select(e => e.Category)
+                .Distinct()
+                .ToListAsync();
+
+            return Ok(categories);
+        }
+        [HttpGet("localidades")]
+        public async Task<ActionResult<List<string>>> GetLocalidades()
+        {
+            var localidades = await _context.Events
+                .Select(e => e.Location)
+                .Distinct()
+                .ToListAsync();
+
+            return Ok(localidades);
+        }
+        
+        [HttpGet("datas")]
+        public async Task<ActionResult<List<string>>> GetDatas()
+        {
+            var datas = await _context.Events
+                .Select(e => e.EventStartDate.Date)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToListAsync();
+
+            var datasFormatadas = datas.Select(d => d.ToString("yyyy-MM-dd")).ToList();
+
+            return Ok(datasFormatadas);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromBody] EventDto eventDto)
