@@ -57,4 +57,35 @@ public class EventTicketController : ControllerBase
 
         return Ok(new { message = "Bilhete criado com sucesso!", ticket.Id });
     }
+    
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateTicket(int id, [FromBody] EventTicketDto dto)
+    {
+        var ticket = await _context.EventTickets.FindAsync(id);
+        if (ticket == null)
+            return NotFound(new { message = "Bilhete não encontrado." });
+
+        ticket.TicketType = dto.TicketType;
+        ticket.Price = dto.Price;
+        ticket.QuantityAvailable = dto.QuantityAvailable;
+        ticket.Description = dto.Description;
+        ticket.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Bilhete atualizado com sucesso." });
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteTicket(int id)
+    {
+        var ticket = await _context.EventTickets.FindAsync(id);
+        if (ticket == null)
+            return NotFound(new { message = "Bilhete não encontrado." });
+
+        _context.EventTickets.Remove(ticket);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Bilhete eliminado com sucesso." });
+    }
+
 }

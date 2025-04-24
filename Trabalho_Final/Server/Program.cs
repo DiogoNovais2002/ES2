@@ -17,6 +17,13 @@ builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfi
 
 // Suporte a APIs (Controllers)
 builder.Services.AddControllers();
+// Registar o EventService para injeção de dependência
+builder.Services.AddScoped<Server.Services.EventService>();
+// Registar o ActivityService para injeção de dependência
+builder.Services.AddScoped<Server.Services.ActivityService>();
+
+
+
 
 builder.Services.AddCors(options =>
 {
