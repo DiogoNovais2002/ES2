@@ -3,42 +3,36 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
 
-
-
 <div class="login-container">
-    
     <div class="login-card">
         <div class="card-header"></div>
 
         <div class="card-body">
             <h2>Login</h2>
             <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
-                <DataAnnotationsValidator/>
-                <ValidationSummary/>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
 
                 <div class="input-group">
                     <span class="input-icon">
                         <i class="fas fa-user"></i>
                     </span>
-                    <InputText @bind-Value="loginModel.Email" class="form-control" placeholder="Email"/>
+                    <InputText @bind-Value="loginModel.Email" class="form-control" placeholder="Email" />
                 </div>
 
                 <div class="input-group">
                     <span class="input-icon">
                         <i class="fas fa-lock"></i>
                     </span>
-                    <InputText @bind-Value="loginModel.Password" class="form-control"
-                               type="@(_showPassword ? "text" : "password")"
-                               placeholder="Password"/>
+                    <InputText @bind-Value="loginModel.Password" class="form-control" type="@(_showPassword ? "text" : "password")" placeholder="Password" />
                     <button type="button" class="toggle-password" @onclick="TogglePasswordVisibility">
                         <i class="fas @(_showPassword ? "fa-eye-slash" : "fa-eye")"></i>
                     </button>
                 </div>
 
-
                 <div class="options">
                     <div>
-                        <input type="checkbox" id="remember"/>
+                        <input type="checkbox" id="remember" />
                         <label for="remember">Lembrar-me</label>
                     </div>
                     <a href="#">Esqueceu a senha?</a>
@@ -50,7 +44,6 @@
                     <a href="/register">Criar Conta</a>
                 </div>
             </EditForm>
-
 
             @if (loginError != null)
             {
@@ -75,12 +68,14 @@
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<LoginResult>();
+                Console.WriteLine($"Token recebido: {result.Token}");
 
-                Console.WriteLine($"Login bem-sucedido! ID do usuário: {result.UserId}");
-                
+                // Armazenar o token JWT no localStorage
+                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", result.Token);
                 await JS.InvokeVoidAsync("localStorage.setItem", "userType", result.userType);
                 await JS.InvokeVoidAsync("localStorage.setItem", "userId", result.UserId.ToString());
 
+                // Redirecionar com base no tipo de usuário
                 if (result.userType == "Organizador")
                 {
                     NavigationManager.NavigateTo("/Home_Organizador");
@@ -105,26 +100,27 @@
         }
     }
 
-
-    public class LoginRequest
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-       
-    }
-
-    public class LoginResult
-    {
-        public string Message { get; set; }
-        public int UserId { get; set; }
-        public string userType { get; set; }
-    }
+    // Toggle para mostrar/ocultar a senha
     private bool _showPassword = false;
 
     private void TogglePasswordVisibility()
     {
         _showPassword = !_showPassword;
     }
+
+    // Model de login
+    public class LoginRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    // Resultado do login contendo o token e o tipo de usuário
+    public class LoginResult
+    {
+        public string Message { get; set; }
+        public int UserId { get; set; }
+        public string userType { get; set; }
+        public string Token { get; set; }  // Token JWT recebido do servidor
+    }
 }
-
-

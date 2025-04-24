@@ -1,6 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using Server.Data;
 using Server.Models;
+using Server.Services;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,13 +16,14 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));  // Usando PostgreSQL com Npgsql
 
-// Identidade (ASP.NET Identity)
+// Configuração do ASP.NET Identity
 builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ApplicationDbContext>();  // Associando Identity ao DbContext
 
 // Suporte a APIs (Controllers)
 builder.Services.AddControllers();
 
+// Suporte a CORS (Cross-Origin Resource Sharing)
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -35,9 +41,34 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "API",
         Version = "v1",
-        Description = "Trabalho Prático ES2"  // Descrição da API
+        Description = "Trabalho Prático ES2"
     });
 });
+
+// Adicionando serviço de JWT
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+// Adicionar configuração de JWT
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -63,9 +94,9 @@ app.UseStaticFiles();  // Servir arquivos estáticos (se houver)
 
 app.UseRouting();  // Configuração do roteamento
 
-app.UseCors();
+app.UseCors(); // Ativar CORS
 
-app.UseAuthentication();  // Habilitar autenticação com Identity
+app.UseAuthentication();  // Habilitar autenticação com Identity e JWT
 app.UseAuthorization();  // Habilitar autorização
 
 // Configuração de rotas do Controller
@@ -73,7 +104,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Mapear Razor Pages (se estiver usando)
 app.MapRazorPages();
 app.MapControllers();  // Mapear Controllers da API
 
