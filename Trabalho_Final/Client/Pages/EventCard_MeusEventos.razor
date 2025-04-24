@@ -1,0 +1,19 @@
+@using Client.Services
+
+<div class="event-card">
+    <div class="event-header">
+        <h4>@Event.Name</h4>
+    </div>
+    <div class="event-body">
+        <p><strong>Data:</strong> @Event.EventStartDate.ToString("dd/MM/yyyy")</p>
+        <p><strong>Descrição:</strong> @Event.Description</p>
+    </div>
+    <div class="event-footer">
+        <button class="btn btn-danger" @onclick="() => OnCancelParticipation.InvokeAsync(Event.Id)">Cancelar Participação</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ApiService.EventDto Event { get; set; }
+    [Parameter] public EventCallback<int> OnCancelParticipation { get; set; }
+}

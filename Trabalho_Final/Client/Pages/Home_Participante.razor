@@ -1,6 +1,8 @@
 @page "/Home_Participante"
 @using Client.Services
 @inject ApiService ApiService
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 
 <h3>Lista de Eventos</h3>
 
@@ -19,17 +21,18 @@
         <option value="">Localidades</option>
         @foreach (var loc in local)
         {
-        <option value="@loc">@loc</option>
+            <option value="@loc">@loc</option>
         }
     </select>
     <select @bind="selectedTime" class="Combobox-large">
         <option value="">Datas</option>
         @foreach (var time in data)
         {
-        <option value="@time">@time</option>
+            <option value="@time">@time</option>
         }
     </select>
 
+    <button class="btn btn-secondary" @onclick="NavigateToMeusEventos">Meus Eventos</button>
 </div>
 
 @if (FilteredEventos.Any())
@@ -37,16 +40,22 @@
     <div class="event-container">
         @foreach (var evento in FilteredEventos)
         {
-            <EventCard Event="evento" OnParticipate="HandleButtonClick" />
+            <EventCard Event="evento" OnParticipate="HandleParticipateClick" />
         }
     </div>
+}
+else
+{
+    <p>Nenhum evento encontrado com os filtros selecionados.</p>
 }
 
 @code {
     private List<ApiService.EventDto> eventos = new();
+    private List<ApiService.EventDto> meusEventosInscritos = new(); 
     private List<string> categorias = new();
     private List<string> local = new();
     private List<string> data = new();
+    private int userId;
 
     private string searchTerm = string.Empty;
     private string selectedCategory = string.Empty;
@@ -55,15 +64,79 @@
 
     protected override async Task OnInitializedAsync()
     {
+        
+        var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+        if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out userId))
+        {
+            
+            await LoadData();
+        }
+    }
+
+    private async Task LoadData()
+    {
+        
         eventos = await ApiService.GetEventsAsync();
         categorias = await ApiService.GetEventCategoriesAsync();
         local = await ApiService.GetLocalidadesAsync();
         data = await ApiService.GetDataAsync();
+
+        
+        meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);  
+
+       
+        eventos = eventos.Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id)).ToList();
     }
 
-    private void HandleButtonClick(int eventId)
+    private async Task HandleParticipateClick(int eventId)
     {
-        Console.WriteLine($" evento ID: {eventId}");
+        try
+        {
+           
+            if (userId <= 0)
+            {
+                await JS.InvokeVoidAsync("alert", "ID de usuário inválido. Faça login novamente.");
+                return;
+            }
+
+            Console.WriteLine($"Tentando inscrever usuário {userId} no evento {eventId}");
+
+           
+            bool success = await ApiService.ParticiparEventoAsync(userId, eventId);
+
+            if (success)
+            {
+                await JS.InvokeVoidAsync("alert", "Inscrição realizada com sucesso!");
+
+                
+                meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);
+
+                
+                var eventoInscrito = eventos.FirstOrDefault(e => e.Id == eventId);
+                if (eventoInscrito != null)
+                {
+                    eventos.Remove(eventoInscrito);
+                }
+
+                
+                StateHasChanged();
+            }
+            else
+            {
+                Console.WriteLine("Falha na inscrição: resposta da API foi negativa");
+                await JS.InvokeVoidAsync("alert", "Não foi possível realizar a inscrição. Tente novamente.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao participar do evento: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", $"Erro ao processar a requisição: {ex.Message}");
+        }
+    }
+
+    private void NavigateToMeusEventos()
+    {
+        NavigationManager.NavigateTo("/Meus_Eventos");
     }
 
     private IEnumerable<ApiService.EventDto> FilteredEventos =>
@@ -73,5 +146,4 @@
             (string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation) &&
             (string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
         );
-
 }

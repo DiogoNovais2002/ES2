@@ -38,7 +38,41 @@ public class ApiService
     {
         return await _httpClient.GetFromJsonAsync<List<string>>("api/Event/datas");
     }
+   
+    public async Task<bool> ParticiparEventoAsync(int userId, int eventId)
+    {
+        var registration = new
+        {
+            UserId = userId,
+            EventId = eventId,
+            
+        };
 
+        var response = await _httpClient.PostAsJsonAsync("api/event/participate", registration);
+        return response.IsSuccessStatusCode;
+    }
+
+    
+    public async Task<List<EventDto>> GetEventsByParticipantAsync(int userId)
+    {
+        var response = await _httpClient.GetAsync($"api/Event/participant/{userId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<List<EventDto>>();
+            return result ?? new List<EventDto>();
+        }
+
+        return new List<EventDto>();
+    }
+
+    public async Task<bool> CancelarParticipacaoAsync(int userId, int eventId)
+    {
+        var response = await _httpClient.DeleteAsync($"api/Event/{eventId}/participants/{userId}");
+
+        return response.IsSuccessStatusCode;
+    }
+    
     // Obter um evento específico por ID
     public async Task<EventDto?> GetEventByIdAsync(int id)
     {
