@@ -17,7 +17,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://
 builder.Services.AddScoped(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
-    var apiBaseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5000/";
+    var apiBaseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:5140/";
     return new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
 });
 

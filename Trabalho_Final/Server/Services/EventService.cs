@@ -16,44 +16,20 @@ namespace Server.Services
 
         public async Task<EventDto?> GetByIdAsync(int id)
         {
-            var eventEntity = await _context.Events.FirstOrDefaultAsync(e => e.Id == id);
-            if (eventEntity == null) return null;
-
-            return new EventDto
-            {
-                Id = eventEntity.Id,
-                OrganizerId = eventEntity.OrganizerId,
-                Name = eventEntity.Name,
-                Description = eventEntity.Description,
-                EventStartDate = eventEntity.EventStartDate,
-                EventEndDate = eventEntity.EventEndDate,
-                Location = eventEntity.Location,
-                Capacity = eventEntity.Capacity,
-                Category = eventEntity.Category
-            };
+            var e = await _context.Events.FindAsync(id);
+            return e == null ? null : MapToDto(e);
         }
 
         public async Task<List<EventDto>> GetAllAsync()
         {
             return await _context.Events
-                .Select(e => new EventDto
-                {
-                    Id = e.Id,
-                    OrganizerId = e.OrganizerId,
-                    Name = e.Name,
-                    Description = e.Description,
-                    EventStartDate = e.EventStartDate,
-                    EventEndDate = e.EventEndDate,
-                    Location = e.Location,
-                    Capacity = e.Capacity,
-                    Category = e.Category
-                })
+                .Select(e => MapToDto(e))
                 .ToListAsync();
         }
 
         public async Task<int> CreateAsync(EventDto dto)
         {
-            var eventEntity = new Event
+            var entity = new Event
             {
                 OrganizerId = dto.OrganizerId,
                 Name = dto.Name,
@@ -67,32 +43,29 @@ namespace Server.Services
                 UpdatedAt = DateTime.UtcNow
             };
 
-            _context.Events.Add(eventEntity);
+            _context.Events.Add(entity);
             await _context.SaveChangesAsync();
-            return eventEntity.Id;
+            return entity.Id;
         }
-        
+
         public async Task<bool> UpdateAsync(int id, EventDto dto)
         {
-            var eventEntity = await _context.Events.FindAsync(id);
-            if (eventEntity == null)
-                return false;
+            var e = await _context.Events.FindAsync(id);
+            if (e == null) return false;
 
-            eventEntity.Name = dto.Name;
-            eventEntity.Description = dto.Description;
-            eventEntity.EventStartDate = dto.EventStartDate;
-            eventEntity.EventEndDate = dto.EventEndDate;
-            eventEntity.Location = dto.Location;
-            eventEntity.Capacity = dto.Capacity;
-            eventEntity.Category = dto.Category;
-            eventEntity.UpdatedAt = DateTime.UtcNow;
+            e.Name = dto.Name;
+            e.Description = dto.Description;
+            e.EventStartDate = dto.EventStartDate;
+            e.EventEndDate = dto.EventEndDate;
+            e.Location = dto.Location;
+            e.Capacity = dto.Capacity;
+            e.Category = dto.Category;
+            e.UpdatedAt = DateTime.UtcNow;
 
-            _context.Events.Update(eventEntity);
             await _context.SaveChangesAsync();
             return true;
         }
 
-        
         public async Task<List<string?>> GetCategoriesAsync()
         {
             return await _context.Events
@@ -118,6 +91,74 @@ namespace Server.Services
                 .ToListAsync();
 
             return datas.Select(d => d.ToString("yyyy-MM-dd")).ToList();
+        }
+
+        public async Task<(bool Success, string Message)> ParticipateAsync(RegistrationDto dto)
+        {
+            var evento = await _context.Events.FindAsync(dto.EventId);
+            if (evento == null)
+                return (false, "Evento não encontrado.");
+
+            if (dto.TicketId == 0)
+                dto.TicketId = 1;
+
+            var exists = await _context.Registrations
+                .AnyAsync(r => r.UserId == dto.UserId && r.EventId == dto.EventId);
+
+            if (exists)
+                return (false, "Já inscrito.");
+
+            var registration = new Registration
+            {
+                UserId = dto.UserId,
+                EventId = dto.EventId,
+                TicketId = dto.TicketId,
+                RegistrationDate = DateTime.UtcNow,
+                Status = "Ativa"
+            };
+
+            _context.Registrations.Add(registration);
+            await _context.SaveChangesAsync();
+
+            return (true, "Inscrição realizada com sucesso.");
+        }
+
+        public async Task<List<EventDto>> GetEventsByParticipantAsync(int userId)
+        {
+            return await _context.Registrations
+                .Where(r => r.UserId == userId)
+                .Include(r => r.Event)
+                .Select(r => MapToDto(r.Event))
+                .ToListAsync();
+        }
+
+        public async Task<bool> CancelParticipationAsync(int eventId, int userId)
+        {
+            var registration = await _context.Registrations
+                .FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId);
+
+            if (registration == null)
+                return false;
+
+            _context.Registrations.Remove(registration);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        private static EventDto MapToDto(Event e)
+        {
+            return new EventDto
+            {
+                Id = e.Id,
+                OrganizerId = e.OrganizerId,
+                Name = e.Name,
+                Description = e.Description,
+                EventStartDate = e.EventStartDate,
+                EventEndDate = e.EventEndDate,
+                Location = e.Location,
+                Capacity = e.Capacity,
+                Category = e.Category
+            };
         }
 
     }

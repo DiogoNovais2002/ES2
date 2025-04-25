@@ -18,7 +18,7 @@ public class EventTicketController : ControllerBase
     }
 
     [HttpGet("{eventId}")]
-    [Authorize(Roles = "Organizador,Participante")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetTicketsForEvent(int eventId)
     {
         var tickets = await _context.EventTickets
@@ -40,6 +40,7 @@ public class EventTicketController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public async Task<IActionResult> CreateTicket([FromBody] EventTicketDto dto)
     {
         var ticket = new EventTicket

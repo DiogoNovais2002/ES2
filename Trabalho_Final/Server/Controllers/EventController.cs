@@ -7,7 +7,7 @@ namespace Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Organizador")]             // só Organizadores podem criar/editar/apagar
+    [Authorize(Roles = "Organizador")]
     public class EventController : ControllerBase
     {
         private readonly EventService _service;
@@ -18,7 +18,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("{id}")]
-        [AllowAnonymous]                             // quem quiser ver detalhes
+        [AllowAnonymous]
         public async Task<IActionResult> GetEventById(int id)
         {
             var eventDto = await _service.GetByIdAsync(id);
@@ -29,13 +29,12 @@ namespace Server.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Organizador,Participante")] // ambos podem listar
+        [AllowAnonymous]
         public async Task<IActionResult> GetEvents()
         {
             var events = await _service.GetAllAsync();
             return Ok(events);
         }
-
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateEventAsync(int id, [FromBody] EventDto evento)
@@ -47,7 +46,6 @@ namespace Server.Controllers
             return Ok(new { message = "Evento atualizado com sucesso!" });
         }
 
-        
         [HttpGet("categories")]
         [Authorize(Roles = "Organizador,Participante")]
         public async Task<ActionResult<List<string>>> GetCategories()
@@ -69,15 +67,14 @@ namespace Server.Controllers
         public async Task<ActionResult<List<string>>> GetDatas()
         {
             var datas = await _service.GetDatasAsync();
-
             return Ok(datas);
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> CreateEvent([FromBody] EventDto eventDto)
         {
             var eventId = await _service.CreateAsync(eventDto);
-
             return Ok(new
             {
                 message = "Evento criado com sucesso!",
@@ -86,76 +83,34 @@ namespace Server.Controllers
         }
 
         [HttpPost("participate")]
-        [Authorize(Roles = "Participante")]            // apenas Participantes
+        [Authorize(Roles = "Participante")]
         public async Task<IActionResult> Participate([FromBody] RegistrationDto registrationDto)
         {
-            var evento = await _context.Events.FindAsync(registrationDto.EventId);
-            if (evento == null)
-                return NotFound(new { message = "Evento não encontrado." });
+            var result = await _service.ParticipateAsync(registrationDto);
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
 
-            if (registrationDto.TicketId == 0)
-                registrationDto.TicketId = 1; // padrão
-
-            var inscrito = await _context.Registrations
-                .AnyAsync(r => r.UserId == registrationDto.UserId && r.EventId == registrationDto.EventId);
-
-            if (inscrito)
-                return BadRequest(new { message = "Já inscrito." });
-
-            var registration = new Registration
-            {
-                UserId = registrationDto.UserId,
-                EventId = registrationDto.EventId,
-                TicketId = registrationDto.TicketId,
-                RegistrationDate = DateTime.UtcNow,
-                Status = "Ativa"
-            };
-
-            _context.Registrations.Add(registration);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Inscrição realizada com sucesso." });
+            return Ok(new { message = result.Message });
         }
 
         [HttpGet("participant/{userId}")]
         [Authorize(Roles = "Participante,Organizador")]
         public async Task<IActionResult> GetEventsByParticipant(int userId)
         {
-            var registrations = await _context.Registrations
-                .Where(r => r.UserId == userId)
-                .Include(r => r.Event)
-                .Select(r => new EventDto
-                {
-                    Id = r.Event.Id,
-                    OrganizerId = r.Event.OrganizerId,
-                    Name = r.Event.Name,
-                    Description = r.Event.Description,
-                    EventStartDate = r.Event.EventStartDate,
-                    EventEndDate = r.Event.EventEndDate,
-                    Location = r.Event.Location,
-                    Capacity = r.Event.Capacity,
-                    Category = r.Event.Category
-                })
-                .ToListAsync();
-
-            if (!registrations.Any())
+            var events = await _service.GetEventsByParticipantAsync(userId);
+            if (!events.Any())
                 return NotFound(new { message = "Nenhum evento encontrado." });
 
-            return Ok(registrations);
+            return Ok(events);
         }
 
         [HttpDelete("{eventId}/participants/{userId}")]
-        [Authorize(Roles = "Participante")]            // apenas o próprio pode cancelar
+        [Authorize(Roles = "Participante")]
         public async Task<IActionResult> CancelParticipation(int eventId, int userId)
         {
-            var registration = await _context.Registrations
-                .FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId);
-
-            if (registration == null)
+            var success = await _service.CancelParticipationAsync(eventId, userId);
+            if (!success)
                 return NotFound(new { message = "Inscrição não encontrada." });
-
-            _context.Registrations.Remove(registration);
-            await _context.SaveChangesAsync();
 
             return Ok(new { message = "Participação cancelada com sucesso." });
         }

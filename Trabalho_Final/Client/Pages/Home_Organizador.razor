@@ -3,16 +3,12 @@
 @inject ApiService ApiService
 @inject UserService UserService
 @inject NavigationManager Nav
-
 @inject IJSRuntime JS
-@inject NavigationManager Nav
 
 <h1>Dashboard Organizador</h1>
 
 <div class="linha">
     <h3>Gerir Eventos</h3>
-
-    <button class="btn btn-primary" @onclick="CriarEvento">Criar Novo Evento</button>
 </div>
 
 @if (EventoCriado)
@@ -22,28 +18,15 @@
 
 <h4 style="margin-top: 2rem">Lista Eventos</h4>
 
-@if (Eventos != null && Eventos.Any()){
-
+@if (Eventos != null && Eventos.Any())
+{
     <table class="table">
         <thead>
-        <tr>
-            <th>#</th>
-            <th>Nome do Evento</th>
-            <th>Data</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var evento in Eventos)
-        {
             <tr>
-                <td>@evento.Id</td>
-                <td>@evento.Name</td>
-                <td>@evento.EventStartDate.ToString("dd/MM/yyyy")</td>
-                <td>
-                    <a class="btn btn-primary btn-sm" href="/Edit-Event/@evento.Id">Editar</a>
-                </td>
-
+                <th>#</th>
+                <th>Nome do Evento</th>
+                <th>Data</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -53,6 +36,9 @@
                     <td>@evento.Id</td>
                     <td>@evento.Name</td>
                     <td>@evento.EventStartDate.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <a class="btn btn-primary btn-sm" href="/Edit-Event/@evento.Id">Editar</a>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -61,7 +47,6 @@
 else
 {
     <p>Ainda não há eventos.</p>
-}
 }
 
 @code {
@@ -83,7 +68,6 @@ else
 
         // 2. Carrega a lista de eventos para o Organizador
         Eventos = await ApiService.GetEventsAsync();
-
     }
 }
 
@@ -94,11 +78,13 @@ else
         align-items: center;
         width: 100%;
     }
+
     table {
         margin-top: 1rem;
         width: 100%;
         border-collapse: collapse;
     }
+
     th, td {
         padding: 8px 12px;
         text-align: left;

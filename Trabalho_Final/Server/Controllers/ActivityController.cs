@@ -18,7 +18,7 @@ namespace Server.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Organizador,Participante")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetActivities()
         {
             var activities = await _service.GetAllAsync();
@@ -26,7 +26,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("event/{eventId}")]
-        [Authorize(Roles = "Organizador,Participante")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetActivitiesByEventId(int eventId)
         {
             var activities = await _service.GetByEventIdAsync(eventId);
@@ -34,6 +34,7 @@ namespace Server.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> CreateActivity([FromBody] ActivityDto dto)
         {
             await _service.CreateAsync(dto);
@@ -41,6 +42,7 @@ namespace Server.Controllers
         }
 
         [HttpPut("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> UpdateActivity(int id, [FromBody] ActivityDto dto)
         {
             var updated = await _service.UpdateAsync(id, dto);

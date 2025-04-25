@@ -71,17 +71,19 @@ else
         var type = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
         if (type != "Participante")
         {
-            NavigationManager.NavigateTo("/");
+            Nav.NavigateTo("/");
             return;
         }
 
         // 2. Lê userId e carrega dados
         var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
-        if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out userId))
+        int tempId;
+        if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out tempId))
         {
+            userId = tempId;
             await LoadData();
-
         }
+
 
         await LoadData();
     }
@@ -93,7 +95,7 @@ else
         local = await ApiService.GetLocalidadesAsync();
         data = await ApiService.GetDataAsync();
 
-        meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);  
+        meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId.Value);  
 
         eventos = eventos.Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id)).ToList();
     }
@@ -106,11 +108,11 @@ else
             return;
         }
 
-        bool success = await ApiService.ParticiparEventoAsync(userId, eventId);
+        bool success = await ApiService.ParticiparEventoAsync(userId.Value, eventId);
         if (success)
         {
             await JS.InvokeVoidAsync("alert", "Inscrição realizada com sucesso!");
-            meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);
+            meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId.Value);
             var eventoInscrito = eventos.FirstOrDefault(e => e.Id == eventId);
             if (eventoInscrito != null) eventos.Remove(eventoInscrito);
 
