@@ -92,14 +92,46 @@ public class ApiService
         return result?.eventId;
     }
     
+    // Atualizar um evento existente
+    public async Task<bool> UpdateEventAsync(int id, EventDto updatedEvent)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/Event/{id}", updatedEvent);
+        return response.IsSuccessStatusCode;
+    }
+
+    
     // Criar os Tickets para o Evento
+    
+    public async Task<List<EventTicketDto>> GetTicketsByEventIdAsync(int eventId)
+    {
+        return await _httpClient.GetFromJsonAsync<List<EventTicketDto>>($"api/EventTicket/{eventId}");
+    }
+    
     public async Task<bool> CreateTicketAsync(EventTicketDto ticket)
     {
         var response = await _httpClient.PostAsJsonAsync("api/EventTicket", ticket);
         return response.IsSuccessStatusCode;
     }
     
+    public async Task<bool> UpdateTicketAsync(int id, EventTicketDto updatedTicket)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/EventTicket/{id}", updatedTicket);
+        return response.IsSuccessStatusCode;
+    }
+    
+    public async Task<bool> DeleteTicketAsync(int id)
+    {
+        var response = await _httpClient.DeleteAsync($"api/EventTicket/{id}");
+        return response.IsSuccessStatusCode;
+    }
+
+    
     // Criar as Atividades para o Evento
+    
+    public async Task<List<ActivityDto>> GetActivitiesByEventIdAsync(int eventId)
+    {
+        return await _httpClient.GetFromJsonAsync<List<ActivityDto>>($"api/Activity/event/{eventId}");
+    }
     public async Task<bool> CreateActivityAsync(ActivityDto activity)
     {
         var response = await _httpClient.PostAsJsonAsync("api/Activity", activity);
@@ -125,6 +157,18 @@ public class ApiService
             return new UserUpdateDto();
         }
     }
+    public async Task<bool> UpdateActivityAsync(int id, ActivityDto updatedActivity)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/Activity/{id}", updatedActivity);
+        return response.IsSuccessStatusCode;
+    }
+    
+    public async Task<bool> DeleteActivityAsync(int id)
+    {
+        var response = await _httpClient.DeleteAsync($"api/Activity/{id}");
+        return response.IsSuccessStatusCode;
+    }
+
 
     public async Task<string> UpdateUserAsync(UserUpdateDto userUpdate)
     {
@@ -151,6 +195,7 @@ public class ApiService
         public string Message { get; set; }
     }
 
+    
     // DTO correspondente
     public class EventDto
     {
@@ -184,6 +229,7 @@ public class ApiService
     
     public class ActivityDto
     {
+        public int Id { get; set; }
         public int EventId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;

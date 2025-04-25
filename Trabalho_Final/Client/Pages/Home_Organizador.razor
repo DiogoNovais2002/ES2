@@ -1,11 +1,17 @@
-﻿@page "/Home_Organizador"
+@page "/Home_Organizador"
 @using Client.Services
 @inject ApiService ApiService
 @inject UserService UserService
 @inject NavigationManager Nav
 
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<h1>Dashboard Organizador</h1>
+
 <div class="linha">
     <h3>Gerir Eventos</h3>
+
     <button class="btn btn-primary" @onclick="CriarEvento">Criar Novo Evento</button>
 </div>
 
@@ -16,14 +22,15 @@
 
 <h4 style="margin-top: 2rem">Lista Eventos</h4>
 
-@if (Eventos != null && Eventos.Any())
-{
+@if (Eventos != null && Eventos.Any()){
+
     <table class="table">
         <thead>
         <tr>
             <th>#</th>
             <th>Nome do Evento</th>
             <th>Data</th>
+            <th>Ações</th>
         </tr>
         </thead>
         <tbody>
@@ -33,8 +40,21 @@
                 <td>@evento.Id</td>
                 <td>@evento.Name</td>
                 <td>@evento.EventStartDate.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <a class="btn btn-primary btn-sm" href="/Edit-Event/@evento.Id">Editar</a>
+                </td>
+
             </tr>
-        }
+        </thead>
+        <tbody>
+            @foreach (var evento in Eventos)
+            {
+                <tr>
+                    <td>@evento.Id</td>
+                    <td>@evento.Name</td>
+                    <td>@evento.EventStartDate.ToString("dd/MM/yyyy")</td>
+                </tr>
+            }
         </tbody>
     </table>
 }
@@ -42,31 +62,28 @@ else
 {
     <p>Ainda não há eventos.</p>
 }
+}
 
 @code {
-    private bool EventoCriado = false;
+    private bool EventoCriado;
     private List<ApiService.EventDto> Eventos = new();
     private int? userId;
     private string? userType;
 
     protected override async Task OnInitializedAsync()
     {
-        (userId, userType) = await UserService.GetUserDataAsync();
-
-        // Proteção: só Organizador pode acessar
-        if (userId == null || userType != "Organizador")
+        // 1. Verifica role antes de qualquer carregamento
+        var type = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
+        if (type != "Organizador")
         {
-            Nav.NavigateTo("/login");
+            // redireciona quem não for Organizador
+            Nav.NavigateTo("/");
             return;
         }
 
+        // 2. Carrega a lista de eventos para o Organizador
         Eventos = await ApiService.GetEventsAsync();
-    }
 
-    private void CriarEvento()
-    {
-        EventoCriado = true;
-        Nav.NavigateTo("/Create-Event");
     }
 }
 

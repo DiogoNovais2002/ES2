@@ -1,0 +1,278 @@
+﻿@page "/Edit-Event/{Id:int}"
+@using Client.Services
+@inject ApiService ApiService
+@inject NavigationManager Nav
+
+<h3 class="mb-4">Editar Evento</h3>
+
+@if (Carregando)
+{
+    <div class="text-center">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2">A carregar evento...</p>
+    </div>
+}
+else if (Erro)
+{
+    <div class="alert alert-danger">@MensagemErro</div>
+}
+else
+{
+    <EditForm Model="@Evento" OnValidSubmit="HandleValidSubmit" class="needs-validation">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Nome</label>
+                <InputText @bind-Value="Evento.Name" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Categoria</label>
+                <InputText @bind-Value="Evento.Category" class="form-control" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">Descrição</label>
+                <InputTextArea @bind-Value="Evento.Description" class="form-control" rows="3" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Data de Início</label>
+                <InputDate @bind-Value="Evento.EventStartDate" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Data de Fim</label>
+                <InputDate @bind-Value="Evento.EventEndDate" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Localização</label>
+                <InputText @bind-Value="Evento.Location" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Capacidade</label>
+                <InputNumber @bind-Value="Evento.Capacity" class="form-control" />
+            </div>
+        </div>
+
+        <!-- Atividades -->
+        <h5 class="mt-4">Atividades</h5>
+        <div class="d-flex flex-wrap gap-3">
+            @foreach (var atividade in Atividades)
+            {
+                <div class="card p-3 shadow-sm" style="width: 250px;">
+                    <div class="mb-2">
+                        <label class="form-label">Nome:</label>
+                        <InputText @bind-Value="atividade.Name" class="form-control" placeholder="Nome da Atividade" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Descrição:</label>
+                        <InputTextArea @bind-Value="atividade.Description" class="form-control" placeholder="Descrição" />
+                    </div>
+
+
+
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => GuardarAtividade(atividade)">Guardar</button>
+                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => EliminarAtividade(atividade)">Eliminar</button>
+                    </div>
+                </div>
+            }
+        </div>
+        <button type="button" class="btn btn-outline-primary btn-sm mt-3" @onclick="AdicionarAtividade">+ Nova Atividade</button>
+
+        <!-- Bilhetes -->
+        <h5 class="mt-4">Bilhetes</h5>
+        <div class="d-flex flex-wrap gap-3">
+            @foreach (var bilhete in Bilhetes)
+            {
+                <div class="card p-3 shadow-sm" style="width: 250px;">
+                    <div class="mb-2">
+                        <label class="form-label">Tipo:</label>
+                        <InputText @bind-Value="bilhete.TicketType" class="form-control" placeholder="Tipo" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Preço:</label>
+                        <InputNumber @bind-Value="bilhete.Price" class="form-control" placeholder="Preço" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Quantidade:</label>
+                        <InputNumber @bind-Value="bilhete.QuantityAvailable" class="form-control" placeholder="Quantidade" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Descrição:</label>
+                        <InputTextArea @bind-Value="bilhete.Description" class="form-control" placeholder="Descrição" />
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => GuardarBilhete(bilhete)">Guardar</button>
+                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => EliminarBilhete(bilhete)">Eliminar</button>
+                    </div>
+                </div>
+            }
+        </div>
+        <button type="button" class="btn btn-outline-primary btn-sm mt-3" @onclick="AdicionarBilhete">+ Novo Bilhete</button>
+
+        <!-- Botões finais -->
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success">Guardar Alterações</button>
+            <button type="button" class="btn btn-secondary ms-2" @onclick="Voltar">Cancelar</button>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private ApiService.EventDto Evento = new();
+    private List<ApiService.ActivityDto> Atividades = new();
+    private List<ApiService.EventTicketDto> Bilhetes = new();
+
+    private bool Carregando = true;
+    private bool Erro = false;
+    private string MensagemErro = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Evento = await ApiService.GetEventByIdAsync(Id);
+            Atividades = await ApiService.GetActivitiesByEventIdAsync(Id);
+            Bilhetes = await ApiService.GetTicketsByEventIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Erro = true;
+            MensagemErro = $"Erro ao carregar dados: {ex.Message}";
+        }
+        Carregando = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var sucesso = await ApiService.UpdateEventAsync(Id, Evento);
+            if (sucesso)
+                Nav.NavigateTo("/Home_Organizador");
+            else
+                MensagemErro = "Erro ao atualizar o evento.";
+        }
+        catch (Exception ex)
+        {
+            MensagemErro = $"Erro: {ex.Message}";
+        }
+    }
+
+    private async Task GuardarAtividade(ApiService.ActivityDto atividade)
+    {
+        try
+        {
+            if (atividade.Id == 0)
+            {
+                atividade.EventId = Id;
+                var sucesso = await ApiService.CreateActivityAsync(atividade);
+                if (!sucesso)
+                {
+                    MensagemErro = "Erro ao criar atividade.";
+                }
+                else
+                {
+                    Atividades = await ApiService.GetActivitiesByEventIdAsync(Id);
+                }
+            }
+            else
+            {
+                var sucesso = await ApiService.UpdateActivityAsync(atividade.Id, atividade);
+                if (!sucesso)
+                    MensagemErro = "Erro ao atualizar atividade.";
+            }
+        }
+        catch (Exception ex)
+        {
+            MensagemErro = $"Erro ao guardar atividade: {ex.Message}";
+        }
+    }
+
+    private async Task GuardarBilhete(ApiService.EventTicketDto bilhete)
+    {
+        try
+        {
+            if (bilhete.Id == 0)
+            {
+                bilhete.EventId = Id;
+                var sucesso = await ApiService.CreateTicketAsync(bilhete);
+                if (!sucesso)
+                {
+                    MensagemErro = "Erro ao criar bilhete.";
+                }
+                else
+                {
+                    Bilhetes = await ApiService.GetTicketsByEventIdAsync(Id);
+                }
+            }
+            else
+            {
+                var sucesso = await ApiService.UpdateTicketAsync(bilhete.Id, bilhete);
+                if (!sucesso)
+                    MensagemErro = "Erro ao atualizar bilhete.";
+            }
+        }
+        catch (Exception ex)
+        {
+            MensagemErro = $"Erro ao guardar bilhete: {ex.Message}";
+        }
+    }
+
+    private async Task EliminarAtividade(ApiService.ActivityDto atividade)
+    {
+        try
+        {
+            if (atividade.Id > 0)
+                await ApiService.DeleteActivityAsync(atividade.Id);
+            Atividades.Remove(atividade);
+        }
+        catch (Exception ex)
+        {
+            MensagemErro = $"Erro ao eliminar atividade: {ex.Message}";
+        }
+    }
+
+    private async Task EliminarBilhete(ApiService.EventTicketDto bilhete)
+    {
+        try
+        {
+            if (bilhete.Id > 0)
+                await ApiService.DeleteTicketAsync(bilhete.Id);
+            Bilhetes.Remove(bilhete);
+        }
+        catch (Exception ex)
+        {
+            MensagemErro = $"Erro ao eliminar bilhete: {ex.Message}";
+        }
+    }
+
+    private void AdicionarAtividade()
+    {
+        Atividades.Add(new ApiService.ActivityDto { EventId = Id });
+    }
+
+    private void AdicionarBilhete()
+    {
+        Bilhetes.Add(new ApiService.EventTicketDto { EventId = Id });
+    }
+
+    private void Voltar() => Nav.NavigateTo("/Home_Organizador");
+
+    private class ActivityInput
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; } = DateTime.Today;
+        public string StartTime { get; set; } = "09:00";
+        public string EndTime { get; set; } = "10:00";
+    }
+}

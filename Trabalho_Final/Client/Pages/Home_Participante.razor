@@ -67,13 +67,20 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        (userId, userType) = await UserService.GetUserDataAsync();
-
-        // Proteção: só Participante pode acessar
-        if (userId == null || userType != "Participante")
+        // 1. Verifica role antes de carregar dados
+        var type = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
+        if (type != "Participante")
         {
-            Nav.NavigateTo("/login");
+            NavigationManager.NavigateTo("/");
             return;
+        }
+
+        // 2. Lê userId e carrega dados
+        var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+        if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out userId))
+        {
+            await LoadData();
+
         }
 
         await LoadData();
@@ -86,23 +93,27 @@ else
         local = await ApiService.GetLocalidadesAsync();
         data = await ApiService.GetDataAsync();
 
-        meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId.Value);
+        meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);  
+
         eventos = eventos.Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id)).ToList();
     }
 
     private async Task HandleParticipateClick(int eventId)
     {
-        if (userId == null)
-        {
+
+        if (userId <= 0){
             await JS.InvokeVoidAsync("alert", "ID de usuário inválido. Faça login novamente.");
             return;
         }
 
-        bool success = await ApiService.ParticiparEventoAsync(userId.Value, eventId);
+        bool success = await ApiService.ParticiparEventoAsync(userId, eventId);
         if (success)
         {
             await JS.InvokeVoidAsync("alert", "Inscrição realizada com sucesso!");
-            await LoadData();
+            meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);
+            var eventoInscrito = eventos.FirstOrDefault(e => e.Id == eventId);
+            if (eventoInscrito != null) eventos.Remove(eventoInscrito);
+
             StateHasChanged();
         }
         else
