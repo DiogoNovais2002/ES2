@@ -1,0 +1,161 @@
+﻿@page "/Edit-Profile"
+@using Client.Services
+@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+
+<h3>Editar Perfil</h3>
+
+@if (Sucesso)
+{
+    <div class="alert alert-success">Perfil atualizado com sucesso!</div>
+}
+@if (Erro)
+{
+    <div class="alert alert-danger">@MensagemErro</div>
+}
+
+<EditForm Model="@UserUpdate" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label>Nome:</label>
+        <InputText @bind-Value="UserUpdate.Name" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>E-mail:</label>
+        <InputText @bind-Value="UserUpdate.Email" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Número de Telefone:</label>
+        <InputText @bind-Value="UserUpdate.PhoneNumber" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Nova Senha (opcional):</label>
+        <InputText type="password" @bind-Value="UserUpdate.Password" class="form-control" />
+    </div>
+
+    <div>
+        <button type="submit" class="btn btn-primary">Atualizar Perfil</button>
+        <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+    </div>
+</EditForm>
+
+<style>
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .form-control:invalid {
+        border-color: #dc3545;
+    }
+
+    .alert {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 5px;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        margin-right: 0.5rem;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: none;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+    }
+</style>
+
+@code {
+    private ApiService.UserUpdateDto UserUpdate = new();
+    private string MensagemErro = string.Empty;
+    private bool Sucesso = false;
+    private bool Erro = false;
+    private readonly int UserId = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var userData = await ApiService.GetUserAsync(UserId);
+            if (userData != null)
+            {
+                UserUpdate = userData;
+                UserUpdate.Id = UserId;
+                UserUpdate.Password = null;
+            }
+            else
+            {
+                Erro = true;
+                MensagemErro = "Utilizador não encontrado.";
+            }
+        }
+        catch
+        {
+            Erro = true;
+            MensagemErro = "Erro ao carregar dados do utilizador.";
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        Sucesso = false;
+        Erro = false;
+        MensagemErro = string.Empty;
+
+        try
+        {
+            var response = await ApiService.UpdateUserAsync(UserUpdate);
+            if (response.Contains("sucesso"))
+            {
+                Sucesso = true;
+                await Task.Delay(2000);
+                NavigationManager.NavigateTo("/Edit-Profile");
+            }
+            else
+            {
+                Erro = true;
+                MensagemErro = response; 
+            }
+        }
+        catch
+        {
+            Erro = true;
+            MensagemErro = "Erro ao atualizar perfil.";
+        }
+    }
+
+    private void Cancelar()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

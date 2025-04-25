@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Server.Models;
 using Server.DTO;
+using Server.Services;
 
 namespace Server.Controllers
 {
@@ -13,11 +14,13 @@ namespace Server.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;  // Adicione esta linha
+        private readonly UserService _userService;
 
-        public UserController(ApplicationDbContext context, UserManager<User> userManager)  // Adicione o UserManager no construtor
+        public UserController(ApplicationDbContext context, UserManager<User> userManager, UserService userService)  // Adicione o UserManager no construtor
         {
             _context = context;
             _userManager = userManager;  // Atribua a variável _userManager
+            _userService = userService;
         }
 
         [HttpGet("{id}")]
@@ -98,6 +101,19 @@ namespace Server.Controllers
             }
         
             return BadRequest(result.Errors);
+        }
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateDto userDto)
+        {
+            if (id != userDto.Id)
+                return BadRequest("ID mismatch.");
+
+            var result = await _userService.UpdateUserProfile(userDto);
+            if (result != "User updated successfully.")
+                return BadRequest(result);
+
+            return Ok(result);
         }
     }
 }

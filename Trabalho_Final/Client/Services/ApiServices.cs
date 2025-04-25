@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 
 namespace Client.Services;
 using System.Net.Http.Json;
@@ -104,12 +105,52 @@ public class ApiService
         var response = await _httpClient.PostAsJsonAsync("api/Activity", activity);
         return response.IsSuccessStatusCode;
     }
+    
+    public async Task<UserUpdateDto> GetUserAsync(int userId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/User/{userId}");
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Erro ao obter utilizador {userId}: {response.StatusCode}");
+                return new UserUpdateDto();
+            }
+            var user = await response.Content.ReadFromJsonAsync<UserUpdateDto>();
+            return user ?? new UserUpdateDto();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exceção ao obter utilizador {userId}: {ex.Message}");
+            return new UserUpdateDto();
+        }
+    }
 
-
+    public async Task<string> UpdateUserAsync(UserUpdateDto userUpdate)
+    {
+        try
+        {
+            var response = await _httpClient.PutAsJsonAsync($"api/User/{userUpdate.Id}", userUpdate);
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Resposta do PUT api/User/{userUpdate.Id}: {content}, Status: {response.StatusCode}");
+            if (response.IsSuccessStatusCode)
+            {
+                return content.Contains("sucesso", StringComparison.OrdinalIgnoreCase) ? content : "Erro ao atualizar perfil.";
+            }
+            return content;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exceção no PUT api/User/{userUpdate.Id}: {ex.Message}");
+            return $"Erro ao atualizar perfil: {ex.Message}";
+        }
+    }
+    
     private class ApiResponse
     {
         public string Message { get; set; }
     }
+
     // DTO correspondente
     public class EventDto
     {
@@ -117,17 +158,13 @@ public class ApiService
         public int OrganizerId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-
         public DateTime EventStartDate { get; set; }
         public DateTime EventEndDate { get; set; }
-
         public string Location { get; set; } = string.Empty;
         public int Capacity { get; set; }
         public string Category { get; set; } = string.Empty;
         public object EventDate { get; set; }
     }
-
-
     
     public class EventTicketDto
     {
@@ -136,7 +173,6 @@ public class ApiService
         public string TicketType { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int QuantityAvailable { get; set; }
-        
         public string Description { get; set; } = string.Empty;
     }
     
@@ -156,6 +192,16 @@ public class ApiService
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
-    
-    
+
+    public class UserUpdateDto
+    {
+        public int Id { get; set; }
+        [Required(ErrorMessage = "O nome é obrigatório.")]
+        public string Name { get; set; } = string.Empty;
+        [Required(ErrorMessage = "O e-mail é obrigatório.")]
+        [EmailAddress(ErrorMessage = "Formato de e-mail inválido.")]
+        public string Email { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public string? Password { get; set; }
+    }
 }
