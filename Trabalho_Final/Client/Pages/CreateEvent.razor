@@ -1,6 +1,9 @@
 @page "/Create-Event"
+@using System.Text.Json
 @using Client.Services
 @inject ApiService ApiService
+@inject HttpClient Http
+@inject IJSRuntime JS
 
 <h3>Criar Novo Evento</h3>
 
@@ -22,12 +25,10 @@
         <label>Nome:</label>
         <InputText @bind-Value="NovoEvento.Name" class="form-control" />
     </div>
-
     <div class="form-group">
         <label>Descrição:</label>
         <InputTextArea @bind-Value="NovoEvento.Description" class="form-control" />
     </div>
-
     <div class="form-group">
         <label>Data de Início:</label>
         <InputDate @bind-Value="EventStartDate" class="form-control" />
@@ -44,17 +45,14 @@
         <label>Hora de Fim:</label>
         <InputText type="time" @bind-Value="EventEndTime" class="form-control" />
     </div>
-
     <div class="form-group">
         <label>Localização:</label>
         <InputText @bind-Value="NovoEvento.Location" class="form-control" />
     </div>
-
     <div class="form-group">
         <label>Capacidade:</label>
         <InputNumber @bind-Value="NovoEvento.Capacity" class="form-control" />
     </div>
-
     <div class="form-group">
         <label>Categoria:</label>
         <InputText @bind-Value="NovoEvento.Category" class="form-control" />
@@ -80,14 +78,18 @@
                     <InputNumber @bind-Value="ticket.QuantityAvailable" class="form-control" />
                 </div>
                 <div class="form-group">
-                    <label>Beneficios:</label>
+                    <label>Benefícios:</label>
                     <InputTextArea @bind-Value="ticket.Description" class="form-control" />
                 </div>
-                <button type="button" class="btn btn-danger mt-2" @onclick="() => RemoverTicket(ticket)">Remover</button>
+                <button type="button" class="btn btn-danger mt-2" @onclick="() => RemoverTicket(ticket)">
+                    Remover
+                </button>
             </div>
         }
     </div>
-    <button type="button" class="btn btn-secondary mb-3" @onclick="AdicionarTicket">+ Adicionar Bilhete</button>
+    <button type="button" class="btn btn-secondary mb-3" @onclick="AdicionarTicket">
+        + Adicionar Bilhete
+    </button>
 
     <!-- Atividades -->
     <hr />
@@ -116,11 +118,15 @@
                     <label>Hora de Término:</label>
                     <InputText type="time" @bind-Value="activity.EndTime" class="form-control" />
                 </div>
-                <button type="button" class="btn btn-danger mt-2" @onclick="() => RemoverActivity(activity)">Remover</button>
+                <button type="button" class="btn btn-danger mt-2" @onclick="() => RemoverActivity(activity)">
+                    Remover
+                </button>
             </div>
         }
     </div>
-    <button type="button" class="btn btn-secondary mb-3" @onclick="AdicionarActivity">+ Adicionar Atividade</button>
+    <button type="button" class="btn btn-secondary mb-3" @onclick="AdicionarActivity">
+        + Adicionar Atividade
+    </button>
 
     <div>
         <button type="submit" class="btn btn-primary">Criar Evento</button>
@@ -134,7 +140,6 @@
         gap: 1rem;
         margin-bottom: 1rem;
     }
-
     .ticket-card {
         border: 1px solid #ccc;
         border-radius: 10px;
@@ -143,7 +148,6 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         background-color: #f9f9f9;
     }
-
     .ticket-card .form-group {
         margin-bottom: 0.5rem;
     }
@@ -159,164 +163,93 @@
     private string EventStartTime = "09:00";
     private string EventEndTime = "18:00";
 
+    private bool Sucesso;
+    private bool Erro;
     private string MensagemErro = string.Empty;
-    private bool Sucesso = false;
-    private bool Erro = false;
 
     protected override void OnInitialized()
     {
-        NovoEvento = new ApiService.EventDto { OrganizerId = 1 };
+        // Carrega o OrganizerId do localStorage
+        var userIdStr = JS.InvokeAsync<string>("localStorage.getItem", "userId").Result;
+        NovoEvento.OrganizerId = int.TryParse(userIdStr, out var id) ? id : 0;
+
         Tickets.Add(new TicketInput());
         Activities.Add(new ActivityInput());
     }
 
     private async Task HandleValidSubmit()
     {
-        Sucesso = false;
-        Erro = false;
+        Sucesso = Erro = false;
         MensagemErro = string.Empty;
 
-        if (Tickets.Count == 0 || Tickets.Any(t => string.IsNullOrWhiteSpace(t.TicketType)))
+        // Envia header X-UserType para o servidor
+        var userType = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
+        Http.DefaultRequestHeaders.Remove("X-UserType");
+        Http.DefaultRequestHeaders.Add("X-UserType", userType);
+
+        // Prepara datas e horas
+        NovoEvento.EventStartDate = EventStartDate.Date + TimeSpan.Parse(EventStartTime);
+        NovoEvento.EventEndDate   = EventEndDate.Date   + TimeSpan.Parse(EventEndTime);
+
+        // 1) Cria evento
+        var resp = await Http.PostAsJsonAsync("api/Event", NovoEvento);
+        if (!resp.IsSuccessStatusCode)
         {
             Erro = true;
-            MensagemErro = "O evento deve ter pelo menos um bilhete com tipo definido.";
+            MensagemErro = "Erro ao criar evento.";
             return;
         }
 
-        var totalBilhetes = Tickets.Sum(t => t.QuantityAvailable);
-        if (totalBilhetes != NovoEvento.Capacity)
+        var data = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        var eventId = data.GetProperty("eventId").GetInt32();
+
+        // 2) Cria bilhetes
+        foreach (var t in Tickets)
         {
-            Erro = true;
-            MensagemErro = $"A soma dos bilhetes ({totalBilhetes}) deve ser igual à capacidade do evento ({NovoEvento.Capacity}).";
-            return;
-        }
-
-        if (!TimeSpan.TryParse(EventStartTime, out var startHora) || !TimeSpan.TryParse(EventEndTime, out var endHora))
-        {
-            Erro = true;
-            MensagemErro = "Hora de início ou fim do evento inválida.";
-            return;
-        }
-
-        var dataHoraInicio = DateTime.SpecifyKind(EventStartDate.Date + startHora, DateTimeKind.Utc);
-        var dataHoraFim = DateTime.SpecifyKind(EventEndDate.Date + endHora, DateTimeKind.Utc);
-
-        if (dataHoraInicio >= dataHoraFim)
-        {
-            Erro = true;
-            MensagemErro = "A data/hora de fim do evento deve ser posterior à de início.";
-            return;
-        }
-
-        NovoEvento.EventStartDate = dataHoraInicio;
-        NovoEvento.EventEndDate = dataHoraFim;
-
-        if (Activities.Any())
-        {
-            foreach (var a in Activities)
+            var ok = await ApiService.CreateTicketAsync(new ApiService.EventTicketDto
             {
-                if (string.IsNullOrWhiteSpace(a.Name) ||
-                    !TimeSpan.TryParse(a.StartTime, out var hs) ||
-                    !TimeSpan.TryParse(a.EndTime, out var he))
-                {
-                    Erro = true;
-                    MensagemErro = "Todas as atividades devem ter nome, hora de início e fim válidas.";
-                    return;
-                }
-
-                var atividadeInicio = a.StartDate.Date + hs;
-                var atividadeFim = a.StartDate.Date + he;
-
-                if (atividadeInicio < dataHoraInicio || atividadeFim > dataHoraFim)
-                {
-                    Erro = true;
-                    MensagemErro = "Atividades devem estar dentro do intervalo de data/hora do evento.";
-                    return;
-                }
-
-                if (atividadeInicio >= atividadeFim)
-                {
-                    Erro = true;
-                    MensagemErro = "Atividade deve terminar após a hora de início.";
-                    return;
-                }
-            }
-        }
-
-
-        try
-        {
-            var eventId = await ApiService.CreateEventAsync(NovoEvento);
-            if (eventId is null)
+                EventId          = eventId,
+                TicketType       = t.TicketType,
+                Price            = t.Price,
+                QuantityAvailable= t.QuantityAvailable,
+                Description      = t.Description
+            });
+            if (!ok)
             {
                 Erro = true;
-                MensagemErro = "Erro ao criar evento.";
+                MensagemErro = $"Erro ao criar bilhete '{t.TicketType}'.";
                 return;
             }
-
-            foreach (var t in Tickets)
-            {
-                var success = await ApiService.CreateTicketAsync(new ApiService.EventTicketDto
-                {
-                    EventId = eventId.Value,
-                    TicketType = t.TicketType,
-                    Price = t.Price,
-                    QuantityAvailable = t.QuantityAvailable,
-                    Description = t.Description
-                });
-
-                if (!success)
-                {
-                    Erro = true;
-                    MensagemErro = $"Erro ao criar o bilhete do tipo '{t.TicketType}'.";
-                    return;
-                }
-            }
-
-            foreach (var act in Activities)
-            {
-                TimeSpan.TryParse(act.StartTime, out var hs);
-                TimeSpan.TryParse(act.EndTime, out var he);
-
-                var success = await ApiService.CreateActivityAsync(new ApiService.ActivityDto
-                {
-                    EventId = eventId.Value,
-                    Name = act.Name,
-                    Description = act.Description,
-                    ActivityStartDate = DateTime.SpecifyKind(act.StartDate.Date + hs, DateTimeKind.Utc),
-                    ActivityEndDate = DateTime.SpecifyKind(act.StartDate.Date + he, DateTimeKind.Utc),
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                });
-
-                if (!success)
-                {
-                    Erro = true;
-                    MensagemErro = $"Erro ao criar a atividade '{act.Name}'.";
-                    return;
-                }
-            }
-
-            Sucesso = true;
-            MensagemErro = string.Empty;
-            NovoEvento = new ApiService.EventDto { OrganizerId = 1 };
-            EventStartDate = EventEndDate = DateTime.Today;
-            EventStartTime = "09:00";
-            EventEndTime = "18:00";
-            Tickets.Clear(); Tickets.Add(new TicketInput());
-            Activities.Clear(); Activities.Add(new ActivityInput());
         }
-        catch
+
+        // 3) Cria atividades
+        foreach (var a in Activities)
         {
-            Erro = true;
-            MensagemErro = "Erro ao salvar dados.";
+            var ok = await ApiService.CreateActivityAsync(new ApiService.ActivityDto
+            {
+                EventId            = eventId,
+                Name               = a.Name,
+                Description        = a.Description,
+                ActivityStartDate  = a.StartDate.Date + TimeSpan.Parse(a.StartTime),
+                ActivityEndDate    = a.StartDate.Date + TimeSpan.Parse(a.EndTime),
+                CreatedAt          = DateTime.UtcNow,
+                UpdatedAt          = DateTime.UtcNow
+            });
+            if (!ok)
+            {
+                Erro = true;
+                MensagemErro = $"Erro ao criar atividade '{a.Name}'.";
+                return;
+            }
         }
+
+        Sucesso = true;
     }
 
     private void AdicionarTicket() => Tickets.Add(new TicketInput());
-    private void RemoverTicket(TicketInput ticket) => Tickets.Remove(ticket);
+    private void RemoverTicket(TicketInput t) => Tickets.Remove(t);
     private void AdicionarActivity() => Activities.Add(new ActivityInput());
-    private void RemoverActivity(ActivityInput activity) => Activities.Remove(activity);
+    private void RemoverActivity(ActivityInput a) => Activities.Remove(a);
 
     private class TicketInput
     {
@@ -325,7 +258,6 @@
         public int QuantityAvailable { get; set; }
         public string Description { get; set; } = string.Empty;
     }
-
     private class ActivityInput
     {
         public string Name { get; set; } = string.Empty;

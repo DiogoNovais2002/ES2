@@ -1,32 +1,28 @@
-using Server.Data;
-using Server.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Server.Data;
 using Server.DTO;
-using Microsoft.AspNetCore.Authorization;
+using Server.Models;
 
 namespace Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Organizador")]             // só Organizadores podem criar/editar/apagar
+    // [Authorize(Roles = "Organizador")]  // Comentado para teste sem cookies/JWT
     public class EventController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-
-        public EventController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        public EventController(ApplicationDbContext context) => _context = context;
 
         [HttpGet("{id}")]
-        [AllowAnonymous]                             // quem quiser ver detalhes
+        [AllowAnonymous]
         public async Task<IActionResult> GetEventById(int id)
         {
-            var eventEntity = await _context.Events
-                .Where(e => e.Id == id)
-                .FirstOrDefaultAsync();
-
+            var eventEntity = await _context.Events.FirstOrDefaultAsync(e => e.Id == id);
             if (eventEntity == null)
                 return NotFound(new { message = "Event not found" });
 
@@ -42,12 +38,11 @@ namespace Server.Controllers
                 Capacity = eventEntity.Capacity,
                 Category = eventEntity.Category
             };
-
             return Ok(eventDto);
         }
 
         [HttpGet]
-        [Authorize(Roles = "Organizador,Participante")] // ambos podem listar
+        [Authorize(Roles = "Organizador,Participante")]
         public async Task<IActionResult> GetEvents()
         {
             var events = await _context.Events
@@ -64,51 +59,19 @@ namespace Server.Controllers
                     Category = e.Category
                 })
                 .ToListAsync();
-
             return Ok(events);
-        }
-
-        [HttpGet("categories")]
-        [Authorize(Roles = "Organizador,Participante")]
-        public async Task<ActionResult<List<string>>> GetCategories()
-        {
-            var categories = await _context.Events
-                .Select(e => e.Category)
-                .Distinct()
-                .ToListAsync();
-
-            return Ok(categories);
-        }
-
-        [HttpGet("localidades")]
-        [Authorize(Roles = "Organizador,Participante")]
-        public async Task<ActionResult<List<string>>> GetLocalidades()
-        {
-            var localidades = await _context.Events
-                .Select(e => e.Location)
-                .Distinct()
-                .ToListAsync();
-
-            return Ok(localidades);
-        }
-
-        [HttpGet("datas")]
-        [Authorize(Roles = "Organizador,Participante")]
-        public async Task<ActionResult<List<string>>> GetDatas()
-        {
-            var datas = await _context.Events
-                .Select(e => e.EventStartDate.Date)
-                .Distinct()
-                .OrderBy(d => d)
-                .ToListAsync();
-
-            var datasFormatadas = datas.Select(d => d.ToString("yyyy-MM-dd")).ToList();
-            return Ok(datasFormatadas);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromBody] EventDto eventDto)
         {
+            // Verifica manual do userType vindo no header X-UserType
+            if (!Request.Headers.TryGetValue("X-UserType", out var userTypes)
+                || userTypes.FirstOrDefault() != "Organizador")
+            {
+                return Forbid();
+            }
+
             var eventEntity = new Event
             {
                 OrganizerId = eventDto.OrganizerId,
@@ -122,32 +85,22 @@ namespace Server.Controllers
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
-
             _context.Events.Add(eventEntity);
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                message = "Evento criado com sucesso!",
-                eventId = eventEntity.Id
-            });
+            return Ok(new { message = "Evento criado com sucesso!", eventId = eventEntity.Id });
         }
 
         [HttpPost("participate")]
-        [Authorize(Roles = "Participante")]            // apenas Participantes
+        [Authorize(Roles = "Participante")]
         public async Task<IActionResult> Participate([FromBody] RegistrationDto registrationDto)
         {
             var evento = await _context.Events.FindAsync(registrationDto.EventId);
             if (evento == null)
                 return NotFound(new { message = "Evento não encontrado." });
 
-            if (registrationDto.TicketId == 0)
-                registrationDto.TicketId = 1; // padrão
-
-            var inscrito = await _context.Registrations
-                .AnyAsync(r => r.UserId == registrationDto.UserId && r.EventId == registrationDto.EventId);
-
-            if (inscrito)
+            registrationDto.TicketId = registrationDto.TicketId == 0 ? 1 : registrationDto.TicketId;
+            if (await _context.Registrations.AnyAsync(r => r.UserId == registrationDto.UserId && r.EventId == registrationDto.EventId))
                 return BadRequest(new { message = "Já inscrito." });
 
             var registration = new Registration
@@ -158,7 +111,6 @@ namespace Server.Controllers
                 RegistrationDate = DateTime.UtcNow,
                 Status = "Ativa"
             };
-
             _context.Registrations.Add(registration);
             await _context.SaveChangesAsync();
 
@@ -193,18 +145,15 @@ namespace Server.Controllers
         }
 
         [HttpDelete("{eventId}/participants/{userId}")]
-        [Authorize(Roles = "Participante")]            // apenas o próprio pode cancelar
+        [Authorize(Roles = "Participante")]
         public async Task<IActionResult> CancelParticipation(int eventId, int userId)
         {
-            var registration = await _context.Registrations
-                .FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId);
-
+            var registration = await _context.Registrations.FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId);
             if (registration == null)
                 return NotFound(new { message = "Inscrição não encontrada." });
 
             _context.Registrations.Remove(registration);
             await _context.SaveChangesAsync();
-
             return Ok(new { message = "Participação cancelada com sucesso." });
         }
     }
