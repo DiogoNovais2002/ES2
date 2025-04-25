@@ -1,10 +1,12 @@
 ﻿@page "/Home_Organizador"
 @using Client.Services
 @inject ApiService ApiService
+@inject UserService UserService
+@inject NavigationManager Nav
 
 <div class="linha">
     <h3>Gerir Eventos</h3>
-    <button class="btn btn-primary" @onclick="CriarEvento" href="/Create-Event">Criar Novo Evento</button>
+    <button class="btn btn-primary" @onclick="CriarEvento">Criar Novo Evento</button>
 </div>
 
 @if (EventoCriado)
@@ -31,7 +33,6 @@
                 <td>@evento.Id</td>
                 <td>@evento.Name</td>
                 <td>@evento.EventStartDate.ToString("dd/MM/yyyy")</td>
-
             </tr>
         }
         </tbody>
@@ -45,15 +46,27 @@ else
 @code {
     private bool EventoCriado = false;
     private List<ApiService.EventDto> Eventos = new();
+    private int? userId;
+    private string? userType;
 
     protected override async Task OnInitializedAsync()
     {
+        (userId, userType) = await UserService.GetUserDataAsync();
+
+        // Proteção: só Organizador pode acessar
+        if (userId == null || userType != "Organizador")
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
         Eventos = await ApiService.GetEventsAsync();
     }
 
     private void CriarEvento()
     {
         EventoCriado = true;
+        Nav.NavigateTo("/Create-Event");
     }
 }
 
