@@ -1,4 +1,4 @@
-﻿@page "/Home_Organizador"
+@page "/Home_Organizador"
 @using Client.Services
 @inject ApiService ApiService
 
@@ -9,7 +9,6 @@
 
 <div class="linha">
     <h3>Gerir Eventos</h3>
-    <button class="btn btn-primary" @onclick="CriarEvento">Criar Novo Evento</button>
 </div>
 
 @if (EventoCriado)
@@ -23,10 +22,23 @@
 {
     <table class="table">
         <thead>
+        <tr>
+            <th>#</th>
+            <th>Nome do Evento</th>
+            <th>Data</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var evento in Eventos)
+        {
             <tr>
-                <th>#</th>
-                <th>Nome do Evento</th>
-                <th>Data</th>
+                <td>@evento.Id</td>
+                <td>@evento.Name</td>
+                <td>@evento.EventStartDate.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <a class="btn btn-primary btn-sm" href="/Edit-Event/@evento.Id">Editar</a>
+                </td>
             </tr>
         </thead>
         <tbody>
@@ -63,13 +75,6 @@ else
 
         // 2. Carrega a lista de eventos para o Organizador
         Eventos = await ApiService.GetEventsAsync();
-    }
-
-    private void CriarEvento()
-    {
-        EventoCriado = true;
-        // navega para a página de criação
-        Nav.NavigateTo("/create-event");
     }
 }
 

@@ -1,8 +1,6 @@
-using Server.Data;
-using Server.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Server.DTO;
+using Server.Services;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Server.Controllers
@@ -12,36 +10,20 @@ namespace Server.Controllers
     [Authorize(Roles = "Organizador")]             // só Organizadores podem criar/editar/apagar
     public class EventController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly EventService _service;
 
-        public EventController(ApplicationDbContext context)
+        public EventController(EventService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet("{id}")]
         [AllowAnonymous]                             // quem quiser ver detalhes
         public async Task<IActionResult> GetEventById(int id)
         {
-            var eventEntity = await _context.Events
-                .Where(e => e.Id == id)
-                .FirstOrDefaultAsync();
-
-            if (eventEntity == null)
-                return NotFound(new { message = "Event not found" });
-
-            var eventDto = new EventDto
-            {
-                Id = eventEntity.Id,
-                OrganizerId = eventEntity.OrganizerId,
-                Name = eventEntity.Name,
-                Description = eventEntity.Description,
-                EventStartDate = eventEntity.EventStartDate,
-                EventEndDate = eventEntity.EventEndDate,
-                Location = eventEntity.Location,
-                Capacity = eventEntity.Capacity,
-                Category = eventEntity.Category
-            };
+            var eventDto = await _service.GetByIdAsync(id);
+            if (eventDto == null)
+                return NotFound(new { message = "Evento não encontrado." });
 
             return Ok(eventDto);
         }
@@ -50,33 +32,27 @@ namespace Server.Controllers
         [Authorize(Roles = "Organizador,Participante")] // ambos podem listar
         public async Task<IActionResult> GetEvents()
         {
-            var events = await _context.Events
-                .Select(e => new EventDto
-                {
-                    Id = e.Id,
-                    OrganizerId = e.OrganizerId,
-                    Name = e.Name,
-                    Description = e.Description,
-                    EventStartDate = e.EventStartDate,
-                    EventEndDate = e.EventEndDate,
-                    Location = e.Location,
-                    Capacity = e.Capacity,
-                    Category = e.Category
-                })
-                .ToListAsync();
-
+            var events = await _service.GetAllAsync();
             return Ok(events);
         }
 
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateEventAsync(int id, [FromBody] EventDto evento)
+        {
+            var success = await _service.UpdateAsync(id, evento);
+            if (!success)
+                return NotFound(new { message = "Evento não encontrado." });
+
+            return Ok(new { message = "Evento atualizado com sucesso!" });
+        }
+
+        
         [HttpGet("categories")]
         [Authorize(Roles = "Organizador,Participante")]
         public async Task<ActionResult<List<string>>> GetCategories()
         {
-            var categories = await _context.Events
-                .Select(e => e.Category)
-                .Distinct()
-                .ToListAsync();
-
+            var categories = await _service.GetCategoriesAsync();
             return Ok(categories);
         }
 
@@ -84,11 +60,7 @@ namespace Server.Controllers
         [Authorize(Roles = "Organizador,Participante")]
         public async Task<ActionResult<List<string>>> GetLocalidades()
         {
-            var localidades = await _context.Events
-                .Select(e => e.Location)
-                .Distinct()
-                .ToListAsync();
-
+            var localidades = await _service.GetLocalidadesAsync();
             return Ok(localidades);
         }
 
@@ -96,40 +68,20 @@ namespace Server.Controllers
         [Authorize(Roles = "Organizador,Participante")]
         public async Task<ActionResult<List<string>>> GetDatas()
         {
-            var datas = await _context.Events
-                .Select(e => e.EventStartDate.Date)
-                .Distinct()
-                .OrderBy(d => d)
-                .ToListAsync();
+            var datas = await _service.GetDatasAsync();
 
-            var datasFormatadas = datas.Select(d => d.ToString("yyyy-MM-dd")).ToList();
-            return Ok(datasFormatadas);
+            return Ok(datas);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromBody] EventDto eventDto)
         {
-            var eventEntity = new Event
-            {
-                OrganizerId = eventDto.OrganizerId,
-                Name = eventDto.Name,
-                Description = eventDto.Description,
-                EventStartDate = eventDto.EventStartDate,
-                EventEndDate = eventDto.EventEndDate,
-                Location = eventDto.Location,
-                Capacity = eventDto.Capacity,
-                Category = eventDto.Category,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _context.Events.Add(eventEntity);
-            await _context.SaveChangesAsync();
+            var eventId = await _service.CreateAsync(eventDto);
 
             return Ok(new
             {
                 message = "Evento criado com sucesso!",
-                eventId = eventEntity.Id
+                eventId = eventId
             });
         }
 

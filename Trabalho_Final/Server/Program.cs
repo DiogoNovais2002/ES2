@@ -31,6 +31,13 @@ builder.Services.AddControllers();
 builder.Services.AddRazorPages();
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
+// Registar o EventService para injeção de dependência
+builder.Services.AddScoped<Server.Services.EventService>();
+// Registar o ActivityService para injeção de dependência
+builder.Services.AddScoped<Server.Services.ActivityService>();
+
+
+
 
 // Corrs
 builder.Services.AddCors(options =>
