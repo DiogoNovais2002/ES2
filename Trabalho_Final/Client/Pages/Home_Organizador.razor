@@ -53,7 +53,7 @@ else
     {
         (userId, userType) = await UserService.GetUserDataAsync();
 
-        // Proteção: só Organizador pode acessar
+       
         if (userId == null || userType != "Organizador")
         {
             Nav.NavigateTo("/login");

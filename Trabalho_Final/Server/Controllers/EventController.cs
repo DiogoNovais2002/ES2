@@ -135,17 +135,17 @@ namespace Server.Controllers
         {
             try
             {
-                // Verifica se o evento existe
+                
                 var evento = await _context.Events.FindAsync(registrationDto.EventId);
                 if (evento == null)
                 {
                     return NotFound(new { message = "Evento não encontrado." });
                 }
 
-                // Se o TicketId não for enviado, definimos um valor padrão (ex: 1)
+               
                 if (registrationDto.TicketId == 0)
                 {
-                    registrationDto.TicketId = 1;  // Defina aqui o valor padrão que desejar
+                    registrationDto.TicketId = 1;  
                 }
 
                 
@@ -162,7 +162,7 @@ namespace Server.Controllers
                 {
                     UserId = registrationDto.UserId,
                     EventId = registrationDto.EventId,
-                    TicketId = registrationDto.TicketId, // Agora o TicketId será o fornecido ou o padrão
+                    TicketId = registrationDto.TicketId, 
                     RegistrationDate = DateTime.UtcNow,
                     Status = "Ativa"
                 };
