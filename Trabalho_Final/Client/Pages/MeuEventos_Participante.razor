@@ -1,0 +1,142 @@
+@page "/Meus_Eventos"
+@using Client.Services
+@inject ApiService ApiService
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+
+<h3>Meus Eventos</h3>
+
+<div class="search-bar">
+    <input type="text" @bind="searchTerm" placeholder="Pesquisar por nome" />
+
+    <select @bind="selectedCategory" class="Combobox-large">
+        <option value="">Categorias</option>
+        @foreach (var categoria in categorias)
+        {
+            <option value="@categoria">@categoria</option>
+        }
+    </select>
+    
+    <select @bind="selectedLocation" class="Combobox-large">
+        <option value="">Localidades</option>
+        @foreach (var loc in local)
+        {
+            <option value="@loc">@loc</option>
+        }
+    </select>
+    <select @bind="selectedTime" class="Combobox-large">
+        <option value="">Datas</option>
+        @foreach (var time in data)
+        {
+            <option value="@time">@time</option>
+        }
+    </select>
+
+    <button class="btn btn-secondary" @onclick="NavigateToAllEvents">Ver Todos os Eventos</button>
+</div>
+
+@if (isLoading)
+{
+<div class="loading">Carregando seus eventos...</div>
+}
+else if (meusEventos != null && meusEventos.Any())
+{
+<div class="event-container">
+    @foreach (var evento in FilteredEventos)
+    {
+        <EventCard_MeusEventos Event="evento" OnCancelParticipation="HandleCancelarParticipacao" />
+    }
+</div>
+}
+else
+{
+<div class="no-events">
+    <p>Você ainda não está participando de nenhum evento.</p>
+    <button class="btn btn-primary" @onclick="NavigateToAllEvents">Ver todos os eventos disponíveis</button>
+</div>
+}
+
+
+@code {
+    private List<ApiService.EventDto> meusEventos = new();
+    private List<string> categorias = new();
+    private List<string> local = new();
+    private List<string> data = new();
+    private int userId;
+    private bool isLoading = true;
+
+    private string searchTerm = string.Empty;
+    private string selectedCategory = string.Empty;
+    private string selectedLocation = string.Empty;
+    private string selectedTime = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+        if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out userId))
+        {
+            isLoading = true;
+            await LoadData();
+            isLoading = false;
+        }
+    }
+
+
+    private async Task LoadData()
+    {
+        meusEventos = await ApiService.GetEventsByParticipantAsync(userId);
+
+        if (meusEventos == null || !meusEventos.Any())
+        {
+            Console.WriteLine("Nenhum evento encontrado para o usuário.");
+        }
+
+        categorias = await ApiService.GetEventCategoriesAsync();
+        local = await ApiService.GetLocalidadesAsync();
+        data = await ApiService.GetDataAsync();
+
+        DebugFilteredEventos();
+    }
+
+    private async Task HandleCancelarParticipacao(int eventId)
+    {
+        bool success = await ApiService.CancelarParticipacaoAsync(userId, eventId);
+
+        if (success)
+        {
+            await JS.InvokeVoidAsync("alert", "Participação cancelada com sucesso!");
+            await LoadData();  
+            StateHasChanged(); 
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Não foi possível cancelar sua participação. Tente novamente.");
+        }
+    }
+
+
+
+    private void NavigateToAllEvents()
+    {
+        NavigationManager.NavigateTo("/Home_Participante");
+    }
+
+    private IEnumerable<ApiService.EventDto> FilteredEventos =>
+        meusEventos.Where(e =>
+            (string.IsNullOrEmpty(searchTerm) || e.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(selectedCategory) || e.Category == selectedCategory) &&
+            (string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation) &&
+            (string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
+        );
+
+    private void DebugFilteredEventos()
+    {
+        var filtered = FilteredEventos.ToList();
+        Console.WriteLine($"Eventos filtrados: {filtered.Count}");
+        foreach (var evento in filtered)
+        {
+            Console.WriteLine($"Evento: {evento.Name}, Categoria: {evento.Category}, Local: {evento.Location}");
+        }
+    }
+
+}

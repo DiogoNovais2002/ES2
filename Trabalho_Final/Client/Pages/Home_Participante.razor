@@ -1,93 +1,149 @@
 @page "/Home_Participante"
 @using Client.Services
 @inject ApiService ApiService
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 
 <h3>Lista de Eventos</h3>
 
-@if (Eventos != null && Eventos.Any())
-{
-<div class="event-container">
-    @foreach (var evento in Eventos)
-    {
-    <div class="event-card">
-        <div class="event-header">
-            <h4>@evento.Name</h4>
-        </div>
-        <div class="event-body">
-            <p><strong>Data:</strong> @evento.EventStartDate.ToString("dd/MM/yyyy")</p>
-            <p><strong>Descrição:</strong> @evento.Description</p>
-        </div>
-        <div class="event-footer">
-            <button class="btn btn-primary" @onclick="() => HandleButtonClick(evento.Id)">Participar</button>
-        </div>
-    </div>
-    }
+<div class="search-bar">
+    <input type="text" @bind="searchTerm" placeholder="Pesquisar por nome" />
+
+    <select @bind="selectedCategory" class="Combobox-large">
+        <option value="">Categorias</option>
+        @foreach (var categoria in categorias)
+        {
+            <option value="@categoria">@categoria</option>
+        }
+    </select>
+    
+    <select @bind="selectedLocation" class="Combobox-large">
+        <option value="">Localidades</option>
+        @foreach (var loc in local)
+        {
+            <option value="@loc">@loc</option>
+        }
+    </select>
+    <select @bind="selectedTime" class="Combobox-large">
+        <option value="">Datas</option>
+        @foreach (var time in data)
+        {
+            <option value="@time">@time</option>
+        }
+    </select>
+
+    <button class="btn btn-secondary" @onclick="NavigateToMeusEventos">Meus Eventos</button>
 </div>
+
+@if (FilteredEventos.Any())
+{
+    <div class="event-container">
+        @foreach (var evento in FilteredEventos)
+        {
+            <EventCard Event="evento" OnParticipate="HandleParticipateClick" />
+        }
+    </div>
 }
 else
 {
-<p>Ainda não há eventos.</p>
+    <p>Nenhum evento encontrado com os filtros selecionados.</p>
 }
 
 @code {
-private List<ApiService.EventDto> Eventos = new();
+    private List<ApiService.EventDto> eventos = new();
+    private List<ApiService.EventDto> meusEventosInscritos = new(); 
+    private List<string> categorias = new();
+    private List<string> local = new();
+    private List<string> data = new();
+    private int userId;
 
-protected override async Task OnInitializedAsync()
-{
-Eventos = await ApiService.GetEventsAsync();
-}
+    private string searchTerm = string.Empty;
+    private string selectedCategory = string.Empty;
+    private string selectedLocation = string.Empty;
+    private string selectedTime = string.Empty;
 
-private void HandleButtonClick(int eventId)
-{
-Console.WriteLine($"Botão clicado para evento ID: {eventId}");
-}
-}
+    protected override async Task OnInitializedAsync()
+    {
+        
+        var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+        if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out userId))
+        {
+            
+            await LoadData();
+        }
+    }
 
-<style>
-    .event-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
+    private async Task LoadData()
+    {
+        
+        eventos = await ApiService.GetEventsAsync();
+        categorias = await ApiService.GetEventCategoriesAsync();
+        local = await ApiService.GetLocalidadesAsync();
+        data = await ApiService.GetDataAsync();
+
+        
+        meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);  
+
+       
+        eventos = eventos.Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id)).ToList();
     }
-    .event-card {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        width: 250px;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 250px;
-        overflow: hidden;
+
+    private async Task HandleParticipateClick(int eventId)
+    {
+        try
+        {
+           
+            if (userId <= 0)
+            {
+                await JS.InvokeVoidAsync("alert", "ID de usuário inválido. Faça login novamente.");
+                return;
+            }
+
+            Console.WriteLine($"Tentando inscrever usuário {userId} no evento {eventId}");
+
+           
+            bool success = await ApiService.ParticiparEventoAsync(userId, eventId);
+
+            if (success)
+            {
+                await JS.InvokeVoidAsync("alert", "Inscrição realizada com sucesso!");
+
+                
+                meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);
+
+                
+                var eventoInscrito = eventos.FirstOrDefault(e => e.Id == eventId);
+                if (eventoInscrito != null)
+                {
+                    eventos.Remove(eventoInscrito);
+                }
+
+                
+                StateHasChanged();
+            }
+            else
+            {
+                Console.WriteLine("Falha na inscrição: resposta da API foi negativa");
+                await JS.InvokeVoidAsync("alert", "Não foi possível realizar a inscrição. Tente novamente.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao participar do evento: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", $"Erro ao processar a requisição: {ex.Message}");
+        }
     }
-    .event-header {
-        background-color: #007bff;
-        color: white;
-        padding: 10px;
-        width: 100%;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-        box-sizing: border-box;
+
+    private void NavigateToMeusEventos()
+    {
+        NavigationManager.NavigateTo("/Meus_Eventos");
     }
-    .event-card h4 {
-        margin: 0;
-    }
-    .event-body {
-        padding: 20px;
-    }
-    .event-footer {
-        margin-bottom: 20px;
-    }
-    .btn {
-        padding: 8px 12px;
-        border: none;
-        border-radius: 5px;
-        background-color: #007bff;
-        color: white;
-        cursor: pointer;
-    }
-    .btn:hover {
-        background-color: #0056b3;
-    }
-</style>
+
+    private IEnumerable<ApiService.EventDto> FilteredEventos =>
+        eventos.Where(e =>
+            (string.IsNullOrEmpty(searchTerm) || e.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(selectedCategory) || e.Category == selectedCategory) &&
+            (string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation) &&
+            (string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
+        );
+}
