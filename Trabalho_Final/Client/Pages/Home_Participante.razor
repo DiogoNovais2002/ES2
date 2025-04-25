@@ -64,73 +64,53 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        
+        // 1. Verifica role antes de carregar dados
+        var type = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
+        if (type != "Participante")
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // 2. Lê userId e carrega dados
         var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
         if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out userId))
         {
-            
             await LoadData();
         }
     }
 
     private async Task LoadData()
     {
-        
         eventos = await ApiService.GetEventsAsync();
         categorias = await ApiService.GetEventCategoriesAsync();
         local = await ApiService.GetLocalidadesAsync();
         data = await ApiService.GetDataAsync();
 
-        
         meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);  
-
-       
         eventos = eventos.Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id)).ToList();
     }
 
     private async Task HandleParticipateClick(int eventId)
     {
-        try
+        if (userId <= 0)
         {
-           
-            if (userId <= 0)
-            {
-                await JS.InvokeVoidAsync("alert", "ID de usuário inválido. Faça login novamente.");
-                return;
-            }
-
-            Console.WriteLine($"Tentando inscrever usuário {userId} no evento {eventId}");
-
-           
-            bool success = await ApiService.ParticiparEventoAsync(userId, eventId);
-
-            if (success)
-            {
-                await JS.InvokeVoidAsync("alert", "Inscrição realizada com sucesso!");
-
-                
-                meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);
-
-                
-                var eventoInscrito = eventos.FirstOrDefault(e => e.Id == eventId);
-                if (eventoInscrito != null)
-                {
-                    eventos.Remove(eventoInscrito);
-                }
-
-                
-                StateHasChanged();
-            }
-            else
-            {
-                Console.WriteLine("Falha na inscrição: resposta da API foi negativa");
-                await JS.InvokeVoidAsync("alert", "Não foi possível realizar a inscrição. Tente novamente.");
-            }
+            await JS.InvokeVoidAsync("alert", "ID de usuário inválido. Faça login novamente.");
+            return;
         }
-        catch (Exception ex)
+
+        bool success = await ApiService.ParticiparEventoAsync(userId, eventId);
+        if (success)
         {
-            Console.WriteLine($"Erro ao participar do evento: {ex.Message}");
-            await JS.InvokeVoidAsync("alert", $"Erro ao processar a requisição: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", "Inscrição realizada com sucesso!");
+            meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);
+            var eventoInscrito = eventos.FirstOrDefault(e => e.Id == eventId);
+            if (eventoInscrito != null) eventos.Remove(eventoInscrito);
+            StateHasChanged();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Não foi possível realizar a inscrição. Tente novamente.");
         }
     }
 

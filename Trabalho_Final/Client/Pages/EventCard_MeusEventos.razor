@@ -1,4 +1,5 @@
 @using Client.Services
+@inject IJSRuntime JS
 
 <div class="event-card">
     <div class="event-header">
@@ -9,11 +10,23 @@
         <p><strong>Descrição:</strong> @Event.Description</p>
     </div>
     <div class="event-footer">
-        <button class="btn btn-danger" @onclick="() => OnCancelParticipation.InvokeAsync(Event.Id)">Cancelar Participação</button>
+        @if (userTypeLoaded && userType == "Participante")
+        {
+            <button class="btn btn-danger" @onclick="() => OnCancelParticipation.InvokeAsync(Event.Id)">Cancelar Participação</button>
+        }
     </div>
 </div>
 
 @code {
     [Parameter] public ApiService.EventDto Event { get; set; }
     [Parameter] public EventCallback<int> OnCancelParticipation { get; set; }
+
+    private string? userType;
+    private bool userTypeLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        userType = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
+        userTypeLoaded = true;
+    }
 }
