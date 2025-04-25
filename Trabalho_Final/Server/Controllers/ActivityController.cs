@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.DTO;
 using Server.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Organizador")]   // só Organizadores podem gerir atividades
     public class ActivityController : ControllerBase
     {
         private readonly ActivityService _service;
@@ -16,6 +18,7 @@ namespace Server.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Organizador,Participante")]
         public async Task<IActionResult> GetActivities()
         {
             var activities = await _service.GetAllAsync();
@@ -23,6 +26,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("event/{eventId}")]
+        [Authorize(Roles = "Organizador,Participante")]
         public async Task<IActionResult> GetActivitiesByEventId(int eventId)
         {
             var activities = await _service.GetByEventIdAsync(eventId);
@@ -42,7 +46,7 @@ namespace Server.Controllers
             var updated = await _service.UpdateAsync(id, dto);
             if (!updated)
                 return NotFound(new { message = "Atividade não encontrada." });
-
+                
             return Ok(new { message = "Atividade atualizada com sucesso." });
         }
 

@@ -12,14 +12,14 @@
     <div class="event-footer">
         @if (userTypeLoaded && userType == "Participante")
         {
-            <button class="btn btn-primary" @onclick="() => OnParticipate.InvokeAsync(Event.Id)">Participar</button>
+            <button class="btn btn-danger" @onclick="() => OnCancelParticipation.InvokeAsync(Event.Id)">Cancelar Participação</button>
         }
     </div>
 </div>
 
 @code {
     [Parameter] public ApiService.EventDto Event { get; set; }
-    [Parameter] public EventCallback<int> OnParticipate { get; set; }
+    [Parameter] public EventCallback<int> OnCancelParticipation { get; set; }
 
     private string? userType;
     private bool userTypeLoaded;

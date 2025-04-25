@@ -1,10 +1,10 @@
-@page "/Home_Participante"
+@page "/Meus_Eventos"
 @using Client.Services
 @inject ApiService ApiService
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 
-<h3>Lista de Eventos</h3>
+<h3>Meus Eventos</h3>
 
 <div class="search-bar">
     <input type="text" @bind="searchTerm" placeholder="Pesquisar por nome" />
@@ -32,30 +32,38 @@
         }
     </select>
 
-    <button class="btn btn-secondary" @onclick="NavigateToMeusEventos">Meus Eventos</button>
+    <button class="btn btn-secondary" @onclick="NavigateToAllEvents">Ver Todos os Eventos</button>
 </div>
 
-@if (FilteredEventos.Any())
+@if (isLoading)
 {
-    <div class="event-container">
-        @foreach (var evento in FilteredEventos)
-        {
-            <EventCard Event="evento" OnParticipate="HandleParticipateClick" />
-        }
-    </div>
+<div class="loading">Carregando seus eventos...</div>
+}
+else if (meusEventos != null && meusEventos.Any())
+{
+<div class="event-container">
+    @foreach (var evento in FilteredEventos)
+    {
+        <EventCard_MeusEventos Event="evento" OnCancelParticipation="HandleCancelarParticipacao" />
+    }
+</div>
 }
 else
 {
-    <p>Nenhum evento encontrado com os filtros selecionados.</p>
+<div class="no-events">
+    <p>Você ainda não está participando de nenhum evento.</p>
+    <button class="btn btn-primary" @onclick="NavigateToAllEvents">Ver todos os eventos disponíveis</button>
+</div>
 }
 
+
 @code {
-    private List<ApiService.EventDto> eventos = new();
-    private List<ApiService.EventDto> meusEventosInscritos = new(); 
+    private List<ApiService.EventDto> meusEventos = new();
     private List<string> categorias = new();
     private List<string> local = new();
     private List<string> data = new();
     private int userId;
+    private bool isLoading = true;
 
     private string searchTerm = string.Empty;
     private string selectedCategory = string.Empty;
@@ -64,66 +72,71 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // 1. Verifica role antes de carregar dados
-        var type = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
-        if (type != "Participante")
-        {
-            NavigationManager.NavigateTo("/");
-            return;
-        }
-
-        // 2. Lê userId e carrega dados
         var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
         if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out userId))
         {
+            isLoading = true;
             await LoadData();
+            isLoading = false;
         }
     }
 
+
     private async Task LoadData()
     {
-        eventos = await ApiService.GetEventsAsync();
+        meusEventos = await ApiService.GetEventsByParticipantAsync(userId);
+
+        if (meusEventos == null || !meusEventos.Any())
+        {
+            Console.WriteLine("Nenhum evento encontrado para o usuário.");
+        }
+
         categorias = await ApiService.GetEventCategoriesAsync();
         local = await ApiService.GetLocalidadesAsync();
         data = await ApiService.GetDataAsync();
 
-        meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);  
-        eventos = eventos.Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id)).ToList();
+        DebugFilteredEventos();
     }
 
-    private async Task HandleParticipateClick(int eventId)
+    private async Task HandleCancelarParticipacao(int eventId)
     {
-        if (userId <= 0)
-        {
-            await JS.InvokeVoidAsync("alert", "ID de usuário inválido. Faça login novamente.");
-            return;
-        }
+        bool success = await ApiService.CancelarParticipacaoAsync(userId, eventId);
 
-        bool success = await ApiService.ParticiparEventoAsync(userId, eventId);
         if (success)
         {
-            await JS.InvokeVoidAsync("alert", "Inscrição realizada com sucesso!");
-            meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);
-            var eventoInscrito = eventos.FirstOrDefault(e => e.Id == eventId);
-            if (eventoInscrito != null) eventos.Remove(eventoInscrito);
-            StateHasChanged();
+            await JS.InvokeVoidAsync("alert", "Participação cancelada com sucesso!");
+            await LoadData();  
+            StateHasChanged(); 
         }
         else
         {
-            await JS.InvokeVoidAsync("alert", "Não foi possível realizar a inscrição. Tente novamente.");
+            await JS.InvokeVoidAsync("alert", "Não foi possível cancelar sua participação. Tente novamente.");
         }
     }
 
-    private void NavigateToMeusEventos()
+
+
+    private void NavigateToAllEvents()
     {
-        NavigationManager.NavigateTo("/Meus_Eventos");
+        NavigationManager.NavigateTo("/Home_Participante");
     }
 
     private IEnumerable<ApiService.EventDto> FilteredEventos =>
-        eventos.Where(e =>
+        meusEventos.Where(e =>
             (string.IsNullOrEmpty(searchTerm) || e.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
             (string.IsNullOrEmpty(selectedCategory) || e.Category == selectedCategory) &&
             (string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation) &&
             (string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
         );
+
+    private void DebugFilteredEventos()
+    {
+        var filtered = FilteredEventos.ToList();
+        Console.WriteLine($"Eventos filtrados: {filtered.Count}");
+        foreach (var evento in filtered)
+        {
+            Console.WriteLine($"Evento: {evento.Name}, Categoria: {evento.Category}, Local: {evento.Location}");
+        }
+    }
+
 }

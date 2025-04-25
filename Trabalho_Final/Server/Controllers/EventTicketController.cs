@@ -3,9 +3,11 @@ using Server.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Server.DTO;
+using Microsoft.AspNetCore.Authorization;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Organizador")]   // só Organizadores podem criar/remover bilhetes
 public class EventTicketController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -15,8 +17,8 @@ public class EventTicketController : ControllerBase
         _context = context;
     }
 
-    // GET: api/EventTicket/{eventId}
     [HttpGet("{eventId}")]
+    [Authorize(Roles = "Organizador,Participante")]
     public async Task<IActionResult> GetTicketsForEvent(int eventId)
     {
         var tickets = await _context.EventTickets
@@ -37,7 +39,6 @@ public class EventTicketController : ControllerBase
         return Ok(tickets);
     }
 
-    // POST: api/EventTicket
     [HttpPost]
     public async Task<IActionResult> CreateTicket([FromBody] EventTicketDto dto)
     {
@@ -75,8 +76,9 @@ public class EventTicketController : ControllerBase
         return Ok(new { message = "Bilhete atualizado com sucesso." });
     }
 
+
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTicket(int id)
+    public async Task<IActionResult> Delete(int id)
     {
         var ticket = await _context.EventTickets.FindAsync(id);
         if (ticket == null)
@@ -85,7 +87,7 @@ public class EventTicketController : ControllerBase
         _context.EventTickets.Remove(ticket);
         await _context.SaveChangesAsync();
 
+
         return Ok(new { message = "Bilhete eliminado com sucesso." });
     }
-
 }
