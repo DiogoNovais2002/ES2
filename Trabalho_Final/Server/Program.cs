@@ -1,30 +1,42 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Server.Data;
 using Server.Models;
+using Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuração da Base de Dados
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?.Replace("{DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "default_password");
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));  // Usando PostgreSQL com Npgsql
+    options.UseNpgsql(connectionString)); // Usando PostgreSQL com Npgsql
 
 // Identidade (ASP.NET Identity)
-builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddEntityFrameworkStores<ApplicationDbContext>();  // Associando Identity ao DbContext
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.User.RequireUniqueEmail = true;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
 // Suporte a APIs (Controllers)
 builder.Services.AddControllers();
 
+// Registrar serviços
+builder.Services.AddScoped<UserService>();
+
+// Configuração de CORS (restrita para o frontend)
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        policy.WithOrigins("http://localhost:5196", "https://localhost:7219")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); // Necessário se usar autenticação com cookies
     });
 });
 
@@ -33,9 +45,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
-        Title = "API",
+        Title = "Event Management API",
         Version = "v1",
-        Description = "Trabalho Prático ES2"  // Descrição da API
+        Description = "API para Gestão de Eventos e Participantes - Trabalho Prático ES2"
     });
 });
 
@@ -44,44 +56,43 @@ var app = builder.Build();
 // Configuração do Middleware
 if (app.Environment.IsDevelopment())
 {
-    app.UseMigrationsEndPoint();  // Habilitar a execução de migrações (em desenvolvimento)
-    app.UseSwagger();  // Habilitar o Swagger para ver a documentação da API
+    app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Minha API v1");
-        c.RoutePrefix = string.Empty;  // Acessar Swagger na raiz
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Event Management API v1");
+        c.RoutePrefix = string.Empty; // Acessar Swagger na raiz (ex.: http://localhost:5000)
     });
 }
 else
 {
-    app.UseExceptionHandler("/Home/Error");  // Página de erro genérica
-    app.UseHsts();  // Forçar HTTPS
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.Run(async context =>
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsync("An error occurred. Please try again later.");
+        });
+    });
+    app.UseHsts();
 }
 
-app.UseHttpsRedirection();  // Redirecionar para HTTPS
-app.UseStaticFiles();  // Servir arquivos estáticos (se houver)
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
 
-app.UseRouting();  // Configuração do roteamento
+app.UseCors("AllowFrontend"); // Aplicar política CORS
 
-app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.UseAuthentication();  // Habilitar autenticação com Identity
-app.UseAuthorization();  // Habilitar autorização
+// Configuração de rotas
+app.MapControllers(); // Mapear endpoints da API
 
-// Configuração de rotas do Controller
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// Mapear Razor Pages (se estiver usando)
-app.MapRazorPages();
-app.MapControllers();  // Mapear Controllers da API
-
-// Aplicar migrações automaticamente durante a execução
+// Aplicar migrações automaticamente
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();  // Aplica a migração ao banco de dados
+    dbContext.Database.Migrate();
 }
 
 // Iniciar a aplicação
