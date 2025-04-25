@@ -1,8 +1,9 @@
 @page "/Home_Participante"
 @using Client.Services
 @inject ApiService ApiService
+@inject UserService UserService
 @inject IJSRuntime JS
-@inject NavigationManager NavigationManager
+@inject NavigationManager Nav
 
 <h3>Lista de Eventos</h3>
 
@@ -24,6 +25,7 @@
             <option value="@loc">@loc</option>
         }
     </select>
+
     <select @bind="selectedTime" class="Combobox-large">
         <option value="">Datas</option>
         @foreach (var time in data)
@@ -51,11 +53,12 @@ else
 
 @code {
     private List<ApiService.EventDto> eventos = new();
-    private List<ApiService.EventDto> meusEventosInscritos = new(); 
+    private List<ApiService.EventDto> meusEventosInscritos = new();
     private List<string> categorias = new();
     private List<string> local = new();
     private List<string> data = new();
-    private int userId;
+    private int? userId;
+    private string? userType;
 
     private string searchTerm = string.Empty;
     private string selectedCategory = string.Empty;
@@ -77,7 +80,10 @@ else
         if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out userId))
         {
             await LoadData();
+
         }
+
+        await LoadData();
     }
 
     private async Task LoadData()
@@ -88,13 +94,14 @@ else
         data = await ApiService.GetDataAsync();
 
         meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);  
+
         eventos = eventos.Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id)).ToList();
     }
 
     private async Task HandleParticipateClick(int eventId)
     {
-        if (userId <= 0)
-        {
+
+        if (userId <= 0){
             await JS.InvokeVoidAsync("alert", "ID de usuário inválido. Faça login novamente.");
             return;
         }
@@ -106,6 +113,7 @@ else
             meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId);
             var eventoInscrito = eventos.FirstOrDefault(e => e.Id == eventId);
             if (eventoInscrito != null) eventos.Remove(eventoInscrito);
+
             StateHasChanged();
         }
         else
@@ -114,10 +122,8 @@ else
         }
     }
 
-    private void NavigateToMeusEventos()
-    {
-        NavigationManager.NavigateTo("/Meus_Eventos");
-    }
+    private void NavigateToMeusEventos() =>
+        Nav.NavigateTo("/Meus_Eventos");
 
     private IEnumerable<ApiService.EventDto> FilteredEventos =>
         eventos.Where(e =>
