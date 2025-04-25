@@ -1,23 +1,38 @@
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Server.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuração da Base de Dados
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?.Replace("{DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "default_password");
-
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));  // Usando PostgreSQL com Npgsql
 
 // Identidade (ASP.NET Identity)
-builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddEntityFrameworkStores<ApplicationDbContext>();  // Associando Identity ao DbContext
+// Identidade (ASP.NET Identity)
+// Substituir AddDefaultIdentity por AddIdentity para suportar roles
+// Identidade (ASP.NET Identity)
+// Usar tipos com chave int para User e Role
+// Identidade (ASP.NET Identity) com chave int para User e Role
+builder.Services.AddIdentity<User, IdentityRole<int>>(options => 
+    options.SignIn.RequireConfirmedAccount = false)
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
-// Suporte a APIs (Controllers)
+// Garantir que não há chamada anterior a AddDefaultIdentity ou AddRoles<IdentityRole>
+// (remova quaisquer linhas como AddDefaultIdentity<User> ou AddRoles<IdentityRole>)            // LINHA ADICIONADA: habilita roles
+
+// Suporte a APIs (Controllers) e Razor Pages
+builder.Services.AddControllers();
+builder.Services.AddRazorPages();
+builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
+// Corrs
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -28,61 +43,57 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Configuração do Swagger para documentação da API
+// Swagger
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "API",
         Version = "v1",
-        Description = "Trabalho Prático ES2"  // Descrição da API
+        Description = "Trabalho Prático ES2"
     });
 });
 
 var app = builder.Build();
 
-// Configuração do Middleware
+// Pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseMigrationsEndPoint();  // Habilitar a execução de migrações (em desenvolvimento)
-    app.UseSwagger();  // Habilitar o Swagger para ver a documentação da API
+    app.UseMigrationsEndPoint();
+    app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Minha API v1");
-        c.RoutePrefix = string.Empty;  // Acessar Swagger na raiz
+        c.RoutePrefix = string.Empty;
     });
 }
 else
 {
-    app.UseExceptionHandler("/Home/Error");  // Página de erro genérica
-    app.UseHsts();  // Forçar HTTPS
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
 }
 
-app.UseHttpsRedirection();  // Redirecionar para HTTPS
-app.UseStaticFiles();  // Servir arquivos estáticos (se houver)
-
-app.UseRouting();  // Configuração do roteamento
-
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
 app.UseCors();
 
-app.UseAuthentication();  // Habilitar autenticação com Identity
-app.UseAuthorization();  // Habilitar autorização
+// AUTENTICAÇÃO E AUTORIZAÇÃO (LINHAS ADICIONADAS)
+app.UseAuthentication();
+app.UseAuthorization();
 
-// Configuração de rotas do Controller
+// Mapear endpoints
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// Mapear Razor Pages (se estiver usando)
 app.MapRazorPages();
-app.MapControllers();  // Mapear Controllers da API
+app.MapControllers();
 
-// Aplicar migrações automaticamente durante a execução
+// Aplicar migrações automaticamente
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();  // Aplica a migração ao banco de dados
+    dbContext.Database.Migrate();
 }
 
-// Iniciar a aplicação
 app.Run();

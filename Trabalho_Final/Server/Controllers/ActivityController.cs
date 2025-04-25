@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Server.Models;
 using Server.DTO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Organizador")]   // só Organizadores podem gerir atividades
     public class ActivityController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -17,8 +19,8 @@ namespace Server.Controllers
             _context = context;
         }
 
-        // GET: api/Activity
         [HttpGet]
+        [Authorize(Roles = "Organizador,Participante")]
         public async Task<IActionResult> GetActivities()
         {
             var activities = await _context.Activities
@@ -38,8 +40,8 @@ namespace Server.Controllers
             return Ok(activities);
         }
 
-        // GET: api/Activity/event/5
         [HttpGet("event/{eventId}")]
+        [Authorize(Roles = "Organizador,Participante")]
         public async Task<IActionResult> GetActivitiesByEventId(int eventId)
         {
             var activities = await _context.Activities
@@ -60,7 +62,6 @@ namespace Server.Controllers
             return Ok(activities);
         }
 
-        // POST: api/Activity
         [HttpPost]
         public async Task<IActionResult> CreateActivity([FromBody] ActivityDto dto)
         {
@@ -77,11 +78,9 @@ namespace Server.Controllers
 
             _context.Activities.Add(activity);
             await _context.SaveChangesAsync();
-            return Ok();
+            return Ok(new { message = "Atividade criada com sucesso." });
         }
 
-
-        // PUT: api/Activity/5
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateActivity(int id, [FromBody] ActivityDto dto)
         {
@@ -96,11 +95,9 @@ namespace Server.Controllers
             activity.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-
             return Ok(new { message = "Atividade atualizada com sucesso." });
         }
 
-        // DELETE: api/Activity/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteActivity(int id)
         {
@@ -110,7 +107,6 @@ namespace Server.Controllers
 
             _context.Activities.Remove(activity);
             await _context.SaveChangesAsync();
-
             return Ok(new { message = "Atividade eliminada com sucesso." });
         }
     }
