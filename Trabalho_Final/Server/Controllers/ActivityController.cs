@@ -53,6 +53,7 @@ namespace Server.Controllers
         }
 
         [HttpDelete("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> DeleteActivity(int id)
         {
             var deleted = await _service.DeleteAsync(id);

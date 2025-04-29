@@ -37,6 +37,7 @@ namespace Server.Controllers
         }
 
         [HttpPut("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> UpdateEventAsync(int id, [FromBody] EventDto evento)
         {
             var success = await _service.UpdateAsync(id, evento);
@@ -47,7 +48,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("categories")]
-        [Authorize(Roles = "Organizador,Participante")]
+        [AllowAnonymous]
         public async Task<ActionResult<List<string>>> GetCategories()
         {
             var categories = await _service.GetCategoriesAsync();
@@ -55,7 +56,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("localidades")]
-        [Authorize(Roles = "Organizador,Participante")]
+        [AllowAnonymous]
         public async Task<ActionResult<List<string>>> GetLocalidades()
         {
             var localidades = await _service.GetLocalidadesAsync();
@@ -63,7 +64,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("datas")]
-        [Authorize(Roles = "Organizador,Participante")]
+        [AllowAnonymous]
         public async Task<ActionResult<List<string>>> GetDatas()
         {
             var datas = await _service.GetDatasAsync();
@@ -83,7 +84,7 @@ namespace Server.Controllers
         }
 
         [HttpPost("participate")]
-        [Authorize(Roles = "Participante")]
+        [AllowAnonymous]
         public async Task<IActionResult> Participate([FromBody] RegistrationDto registrationDto)
         {
             var result = await _service.ParticipateAsync(registrationDto);
@@ -94,7 +95,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("participant/{userId}")]
-        [Authorize(Roles = "Participante,Organizador")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetEventsByParticipant(int userId)
         {
             var events = await _service.GetEventsByParticipantAsync(userId);

@@ -61,6 +61,7 @@ public class EventTicketController : ControllerBase
     }
     
     [HttpPut("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> UpdateTicket(int id, [FromBody] EventTicketDto dto)
     {
         var ticket = await _context.EventTickets.FindAsync(id);
@@ -79,6 +80,7 @@ public class EventTicketController : ControllerBase
 
 
     [HttpDelete("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> Delete(int id)
     {
         var ticket = await _context.EventTickets.FindAsync(id);
