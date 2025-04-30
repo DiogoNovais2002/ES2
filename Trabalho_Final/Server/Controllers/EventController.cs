@@ -106,7 +106,7 @@ namespace Server.Controllers
         }
 
         [HttpDelete("{eventId}/participants/{userId}")]
-        [Authorize(Roles = "Participante")]
+        [AllowAnonymous]
         public async Task<IActionResult> CancelParticipation(int eventId, int userId)
         {
             var success = await _service.CancelParticipationAsync(eventId, userId);
