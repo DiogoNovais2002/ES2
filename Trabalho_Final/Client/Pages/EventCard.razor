@@ -1,4 +1,6 @@
 @using Client.Services
+@inject NavigationManager NavigationManager
+
 <div class="event-card">
     <div class="event-header">
         <h4>@Event.Name</h4>
@@ -8,11 +10,11 @@
         <p><strong>Descrição:</strong> @Event.Description</p>
     </div>
     <div class="event-footer">
-        <button class="btn btn-primary" @onclick="() => OnParticipate.InvokeAsync(Event.Id)">Participar</button>
+        <button class="btn btn-primary" @onclick='() => NavigationManager.NavigateTo($"/evento-detalhes/{Event.Id}")'>Participar</button>
     </div>
 </div>
 
 @code {
-[Parameter] public ApiService.EventDto Event { get; set; }
-[Parameter] public EventCallback<int> OnParticipate { get; set; }
+    [Parameter] public ApiService.EventDto Event { get; set; }
+    [Parameter] public EventCallback<int> OnParticipate { get; set; }
 }
