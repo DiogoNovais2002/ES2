@@ -70,7 +70,13 @@ public class ApiService
         var response = await _httpClient.PostAsJsonAsync("api/Activity", activity);
         return response.IsSuccessStatusCode;
     }
-
+    
+    // Obter os bilhetes de um evento específico
+    public async Task<List<EventTicketDto>> GetTicketsByEventIdAsync(int eventId)
+    {
+        return await _httpClient.GetFromJsonAsync<List<EventTicketDto>>($"api/EventTicket/{eventId}")
+               ?? new List<EventTicketDto>();
+    }
 
     private class ApiResponse
     {

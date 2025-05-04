@@ -17,6 +17,26 @@
         <p><i class="fas fa-tags icon"></i> <strong>Categoria:</strong> @evento.Category</p>
         <p><i class="fas fa-users icon"></i> <strong>Capacidade:</strong> @evento.Capacity</p>
 
+        @if (bilhetes.Any())
+        {
+            <div class="tickets-section">
+                <h4>Bilhetes Disponíveis</h4>
+                @foreach (var ticket in bilhetes)
+                {
+                    <div class="ticket-card">
+                        <p><strong>Tipo:</strong> @ticket.TicketType</p>
+                        <p><strong>Preço:</strong> @ticket.Price €</p>
+                        <p><strong>Descrição:</strong> @ticket.Description</p>
+                        <button class="btn btn-success" @onclick="() => ComprarBilhete(ticket.Id)">Comprar</button>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p>Nenhum bilhete disponível no momento.</p>
+        }
+
         <button class="btn-back" @onclick='() => NavigationManager.NavigateTo("/Home_Participante")'>
             <i class="fas fa-arrow-left"></i> Voltar
         </button>
@@ -32,10 +52,18 @@ else
     public int eventId { get; set; }
 
     private ApiService.EventDto? evento;
+    private List<ApiService.EventTicketDto> bilhetes = new();
 
     protected override async Task OnInitializedAsync()
     {
         evento = await ApiService.GetEventByIdAsync(eventId);
+        bilhetes = await ApiService.GetTicketsByEventIdAsync(eventId);
+    }
+
+    private void ComprarBilhete(int ticketId)
+    {
+        Console.WriteLine($"Bilhete {ticketId} selecionado para compra.");
+        // Redirecionar ou lógica de compra
     }
 }
 
@@ -88,5 +116,29 @@ else
 
     .btn-back i {
         margin-right: 5px;
+    }
+
+    .tickets-section {
+        margin-top: 2rem;
+    }
+
+    .ticket-card {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+    }
+
+    .btn-success:hover {
+        background-color: #218838;
     }
 </style>
