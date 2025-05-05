@@ -3,7 +3,16 @@
 @inject ApiService ApiService
 @inject NavigationManager Nav
 
-<h3 class="mb-4">Editar Evento</h3>
+<h2 class="mb-4">✏️ Editar Evento</h2>
+
+@if (Sucesso)
+{
+    <div class="alert alert-success">✅ Evento atualizado com sucesso!</div>
+}
+@if (Erro)
+{
+    <div class="alert alert-danger">⚠️ @MensagemErro</div>
+}
 
 @if (Carregando)
 {
@@ -12,109 +21,104 @@
         <p class="mt-2">A carregar evento...</p>
     </div>
 }
-else if (Erro)
+else if (!Erro)
 {
-    <div class="alert alert-danger">@MensagemErro</div>
-}
-else
-{
-    <EditForm Model="@Evento" OnValidSubmit="HandleValidSubmit" class="needs-validation">
+    <EditForm Model="@Evento" OnValidSubmit="HandleValidSubmit" class="mb-5">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label">Nome</label>
-                <InputText @bind-Value="Evento.Name" class="form-control" />
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Categoria</label>
-                <InputText @bind-Value="Evento.Category" class="form-control" />
-            </div>
-
-            <div class="col-12">
-                <label class="form-label">Descrição</label>
-                <InputTextArea @bind-Value="Evento.Description" class="form-control" rows="3" />
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Data de Início</label>
-                <InputDate @bind-Value="Evento.EventStartDate" class="form-control" />
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Data de Fim</label>
-                <InputDate @bind-Value="Evento.EventEndDate" class="form-control" />
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Localização</label>
-                <InputText @bind-Value="Evento.Location" class="form-control" />
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Capacidade</label>
-                <InputNumber @bind-Value="Evento.Capacity" class="form-control" />
+        <!-- Detalhes do Evento -->
+        <div class="card p-4 mb-4 shadow-sm">
+            <h4 class="mb-3">📅 Detalhes do Evento</h4>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nome</label>
+                    <InputText @bind-Value="Evento.Name" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Categoria</label>
+                    <InputText @bind-Value="Evento.Category" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Descrição</label>
+                    <InputTextArea @bind-Value="Evento.Description" class="form-control" rows="3" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data de Início</label>
+                    <InputDate @bind-Value="Evento.EventStartDate" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data de Fim</label>
+                    <InputDate @bind-Value="Evento.EventEndDate" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Localização</label>
+                    <InputText @bind-Value="Evento.Location" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Capacidade</label>
+                    <InputNumber @bind-Value="Evento.Capacity" class="form-control" />
+                </div>
             </div>
         </div>
 
         <!-- Atividades -->
-        <h5 class="mt-4">Atividades</h5>
-        <div class="d-flex flex-wrap gap-3">
-            @foreach (var atividade in Atividades)
-            {
-                <div class="card p-3 shadow-sm" style="width: 250px;">
-                    <div class="mb-2">
-                        <label class="form-label">Nome:</label>
-                        <InputText @bind-Value="atividade.Name" class="form-control" placeholder="Nome da Atividade" />
+        <div class="card p-4 mb-4 shadow-sm">
+            <h4 class="mb-3">📋 Atividades</h4>
+            <div class="ticket-container">
+                @foreach (var atividade in Atividades)
+                {
+                    <div class="ticket-card">
+                        <div class="form-group">
+                            <label>Nome</label>
+                            <InputText @bind-Value="atividade.Name" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição</label>
+                            <InputTextArea @bind-Value="atividade.Description" class="form-control" />
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-danger btn-sm mt-2 w-30" @onclick="() => GuardarAtividade(atividade)">Guardar</button>
+                            <button type="button" class="btn btn-sm mt-2 w-30" style="background: red" @onclick="() => EliminarAtividade(atividade)">Eliminar</button>
+                        </div>
                     </div>
-                    <div class="mb-2">
-                        <label class="form-label">Descrição:</label>
-                        <InputTextArea @bind-Value="atividade.Description" class="form-control" placeholder="Descrição" />
-                    </div>
-
-
-
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => GuardarAtividade(atividade)">Guardar</button>
-                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => EliminarAtividade(atividade)">Eliminar</button>
-                    </div>
-                </div>
-            }
+                }
+            </div>
+            <button type="button" class="btn btn-outline-primary" @onclick="AdicionarAtividade">+ Adicionar Atividade</button>
         </div>
-        <button type="button" class="btn btn-outline-primary btn-sm mt-3" @onclick="AdicionarAtividade">+ Nova Atividade</button>
 
         <!-- Bilhetes -->
-        <h5 class="mt-4">Bilhetes</h5>
-        <div class="d-flex flex-wrap gap-3">
-            @foreach (var bilhete in Bilhetes)
-            {
-                <div class="card p-3 shadow-sm" style="width: 250px;">
-                    <div class="mb-2">
-                        <label class="form-label">Tipo:</label>
-                        <InputText @bind-Value="bilhete.TicketType" class="form-control" placeholder="Tipo" />
+        <div class="card p-4 mb-4 shadow-sm">
+            <h4 class="mb-3">🎟️ Bilhetes</h4>
+            <div class="ticket-container">
+                @foreach (var bilhete in Bilhetes)
+                {
+                    <div class="ticket-card">
+                        <div class="form-group">
+                            <label>Tipo de Bilhete</label>
+                            <InputText @bind-Value="bilhete.TicketType" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Preço</label>
+                            <InputNumber @bind-Value="bilhete.Price" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Quantidade</label>
+                            <InputNumber @bind-Value="bilhete.QuantityAvailable" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Benefícios</label>
+                            <InputTextArea @bind-Value="bilhete.Description" class="form-control" />
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-danger btn-sm mt-2 w-30" @onclick="() => GuardarBilhete(bilhete)">Guardar</button>
+                            <button type="button" class="btn btn-sm mt-2 w-30" style="background: red" @onclick="() => EliminarBilhete(bilhete)">Eliminar</button>
+                        </div>
                     </div>
-                    <div class="mb-2">
-                        <label class="form-label">Preço:</label>
-                        <InputNumber @bind-Value="bilhete.Price" class="form-control" placeholder="Preço" />
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">Quantidade:</label>
-                        <InputNumber @bind-Value="bilhete.QuantityAvailable" class="form-control" placeholder="Quantidade" />
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">Descrição:</label>
-                        <InputTextArea @bind-Value="bilhete.Description" class="form-control" placeholder="Descrição" />
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => GuardarBilhete(bilhete)">Guardar</button>
-                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => EliminarBilhete(bilhete)">Eliminar</button>
-                    </div>
-                </div>
-            }
+                }
+            </div>
+            <button type="button" class="btn btn-outline-primary" @onclick="AdicionarBilhete">+ Adicionar Bilhete</button>
         </div>
-        <button type="button" class="btn btn-outline-primary btn-sm mt-3" @onclick="AdicionarBilhete">+ Novo Bilhete</button>
 
         <!-- Botões finais -->
         <div class="mt-4">
@@ -123,7 +127,32 @@ else
         </div>
     </EditForm>
 }
+<style>
+    .ticket-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
 
+    .ticket-card {
+        flex: 1 1 280px;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 1rem;
+        background-color: #fff;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-label {
+        font-weight: 500;
+    }
+
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+</style>
 @code {
     [Parameter] public int Id { get; set; }
 
@@ -133,6 +162,7 @@ else
 
     private bool Carregando = true;
     private bool Erro = false;
+    private bool Sucesso = false;
     private string MensagemErro = "";
 
     protected override async Task OnInitializedAsync()
@@ -157,9 +187,14 @@ else
         {
             var sucesso = await ApiService.UpdateEventAsync(Id, Evento);
             if (sucesso)
+            {
+                Sucesso = true;
                 Nav.NavigateTo("/Home_Organizador");
+            }
             else
+            {
                 MensagemErro = "Erro ao atualizar o evento.";
+            }
         }
         catch (Exception ex)
         {
@@ -255,18 +290,20 @@ else
         }
     }
 
+    private void Voltar()
+    {
+        Nav.NavigateTo("/Home_Organizador");
+    }
+
     private void AdicionarAtividade()
     {
-        Atividades.Add(new ApiService.ActivityDto { EventId = Id });
+        Atividades.Add(new ApiService.ActivityDto());
     }
 
     private void AdicionarBilhete()
     {
-        Bilhetes.Add(new ApiService.EventTicketDto { EventId = Id });
+        Bilhetes.Add(new ApiService.EventTicketDto());
     }
-
-    private void Voltar() => Nav.NavigateTo("/Home_Organizador");
-
     private class ActivityInput
     {
         public string Name { get; set; } = string.Empty;

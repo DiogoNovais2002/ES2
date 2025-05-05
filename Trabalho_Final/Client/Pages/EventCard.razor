@@ -1,20 +1,27 @@
 @using Client.Services
 @inject IJSRuntime JS
 
-<div class="event-card">
-    <div class="event-header">
-        <h4>@Event.Name</h4>
+<div class="event-card shadow-sm rounded-3 border p-4 mb-4 bg-white">
+    <div class="mb-3">
+        <h4 class="mb-1 text-dark">@Event.Name</h4>
+        <small class="text-muted">
+            <i class="bi bi-calendar3 me-1"></i>
+            @Event.EventStartDate.ToString("dd/MM/yyyy")
+        </small>
     </div>
-    <div class="event-body">
-        <p><strong>Data:</strong> @Event.EventStartDate.ToString("dd/MM/yyyy")</p>
-        <p><strong>Descrição:</strong> @Event.Description</p>
+
+    <div class="mb-3">
+        <p class="text-secondary mb-0">@Event.Description</p>
     </div>
-    <div class="event-footer">
-        @if (userTypeLoaded && userType == "Participante")
-        {
-            <button class="btn btn-primary" @onclick="() => OnParticipate.InvokeAsync(Event.Id)">Participar</button>
-        }
-    </div>
+
+    @if (userTypeLoaded && userType == "Participante")
+    {
+        <div class="text-end">
+            <button class="btn btn-outline-primary" @onclick="() => OnParticipate.InvokeAsync(Event.Id)">
+                Participar
+            </button>
+        </div>
+    }
 </div>
 
 @code {

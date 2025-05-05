@@ -16,7 +16,7 @@
             <option value="@categoria">@categoria</option>
         }
     </select>
-    
+
     <select @bind="selectedLocation" class="Combobox-large">
         <option value="">Localidades</option>
         @foreach (var loc in local)
@@ -24,6 +24,7 @@
             <option value="@loc">@loc</option>
         }
     </select>
+
     <select @bind="selectedTime" class="Combobox-large">
         <option value="">Datas</option>
         @foreach (var time in data)
@@ -37,31 +38,31 @@
 
 @if (isLoading)
 {
-<div class="loading">Carregando seus eventos...</div>
+    <div class="loading">A carregar os seus eventos...</div>
 }
-else if (meusEventos != null && meusEventos.Any())
+else if (FilteredEventos.Any())
 {
-<div class="event-container">
-    @foreach (var evento in FilteredEventos)
-    {
-        <EventCard_MeusEventos Event="evento" OnCancelParticipation="HandleCancelarParticipacao" />
-    }
-</div>
+    <div class="event-container">
+        @foreach (var evento in FilteredEventos)
+        {
+            <EventCard_MeusEventos Event="evento" OnCancelParticipation="HandleCancelarParticipacao" />
+        }
+    </div>
 }
 else
 {
-<div class="no-events">
-    <p>Você ainda não está participando de nenhum evento.</p>
-    <button class="btn btn-primary" @onclick="NavigateToAllEvents">Ver todos os eventos disponíveis</button>
-</div>
+    <div class="no-events">
+        <p>Não está inscrito em nenhum evento.</p>
+        <button class="btn btn-primary" @onclick="NavigateToAllEvents">Ver eventos disponíveis</button>
+    </div>
 }
-
 
 @code {
     private List<ApiService.EventDto> meusEventos = new();
     private List<string> categorias = new();
     private List<string> local = new();
     private List<string> data = new();
+
     private int userId;
     private bool isLoading = true;
 
@@ -81,21 +82,12 @@ else
         }
     }
 
-
     private async Task LoadData()
     {
         meusEventos = await ApiService.GetEventsByParticipantAsync(userId);
-
-        if (meusEventos == null || !meusEventos.Any())
-        {
-            Console.WriteLine("Nenhum evento encontrado para o usuário.");
-        }
-
         categorias = await ApiService.GetEventCategoriesAsync();
         local = await ApiService.GetLocalidadesAsync();
         data = await ApiService.GetDataAsync();
-
-        DebugFilteredEventos();
     }
 
     private async Task HandleCancelarParticipacao(int eventId)
@@ -105,21 +97,17 @@ else
         if (success)
         {
             await JS.InvokeVoidAsync("alert", "Participação cancelada com sucesso!");
-            await LoadData();  
-            StateHasChanged(); 
+            await LoadData();
+            StateHasChanged();
         }
         else
         {
-            await JS.InvokeVoidAsync("alert", "Não foi possível cancelar sua participação. Tente novamente.");
+            await JS.InvokeVoidAsync("alert", "Erro ao cancelar a participação. Tente novamente.");
         }
     }
 
-
-
-    private void NavigateToAllEvents()
-    {
+    private void NavigateToAllEvents() =>
         NavigationManager.NavigateTo("/Home_Participante");
-    }
 
     private IEnumerable<ApiService.EventDto> FilteredEventos =>
         meusEventos.Where(e =>
@@ -128,15 +116,4 @@ else
             (string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation) &&
             (string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
         );
-
-    private void DebugFilteredEventos()
-    {
-        var filtered = FilteredEventos.ToList();
-        Console.WriteLine($"Eventos filtrados: {filtered.Count}");
-        foreach (var evento in filtered)
-        {
-            Console.WriteLine($"Evento: {evento.Name}, Categoria: {evento.Category}, Local: {evento.Location}");
-        }
-    }
-
 }

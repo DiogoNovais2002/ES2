@@ -2,128 +2,130 @@
 @using Client.Services
 @inject ApiService ApiService
 
-<h3>Criar Novo Evento</h3>
+<h2 class="mb-4">🎉 Criar Novo Evento</h2>
 
 @if (Sucesso)
 {
-    <div class="alert alert-success">Evento, bilhetes e atividades criados com sucesso!</div>
+    <div class="alert alert-success">✅ Evento, bilhetes e atividades criados com sucesso!</div>
 }
 @if (Erro)
 {
-    <div class="alert alert-danger">@MensagemErro</div>
+    <div class="alert alert-danger">⚠️ @MensagemErro</div>
 }
 
-<EditForm Model="@NovoEvento" OnValidSubmit="HandleValidSubmit">
+<EditForm Model="@NovoEvento" OnValidSubmit="HandleValidSubmit" class="mb-5">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <!-- Evento -->
-    <div class="form-group">
-        <label>Nome:</label>
-        <InputText @bind-Value="NovoEvento.Name" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label>Descrição:</label>
-        <InputTextArea @bind-Value="NovoEvento.Description" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label>Data de Início:</label>
-        <InputDate @bind-Value="EventStartDate" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label>Hora de Início:</label>
-        <InputText type="time" @bind-Value="EventStartTime" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label>Data de Fim:</label>
-        <InputDate @bind-Value="EventEndDate" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label>Hora de Fim:</label>
-        <InputText type="time" @bind-Value="EventEndTime" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label>Localização:</label>
-        <InputText @bind-Value="NovoEvento.Location" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label>Capacidade:</label>
-        <InputNumber @bind-Value="NovoEvento.Capacity" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label>Categoria:</label>
-        <InputText @bind-Value="NovoEvento.Category" class="form-control" />
-    </div>
-
-    <!-- Bilhetes -->
-    <hr />
-    <h4>Bilhetes</h4>
-    <div class="ticket-container">
-        @foreach (var ticket in Tickets)
-        {
-            <div class="ticket-card">
-                <div class="form-group">
-                    <label>Tipo de Bilhete:</label>
-                    <InputText @bind-Value="ticket.TicketType" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label>Preço:</label>
-                    <InputNumber @bind-Value="ticket.Price" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label>Quantidade:</label>
-                    <InputNumber @bind-Value="ticket.QuantityAvailable" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label>Beneficios:</label>
-                    <InputTextArea @bind-Value="ticket.Description" class="form-control" />
-                </div>
-                <button type="button" class="btn btn-danger mt-2" @onclick="() => RemoverTicket(ticket)">Remover</button>
+    <!-- EVENTO -->
+    <div class="card p-4 mb-4 shadow-sm">
+        <h4 class="mb-3">📅 Detalhes do Evento</h4>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Nome</label>
+                <InputText @bind-Value="NovoEvento.Name" class="form-control" />
             </div>
-        }
-    </div>
-    <button type="button" class="btn btn-secondary mb-3" @onclick="AdicionarTicket">+ Adicionar Bilhete</button>
-
-    <!-- Atividades -->
-    <hr />
-    <h4>Atividades</h4>
-    <div class="ticket-container">
-        @foreach (var activity in Activities)
-        {
-            <div class="ticket-card">
-                <div class="form-group">
-                    <label>Nome:</label>
-                    <InputText @bind-Value="activity.Name" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label>Descrição:</label>
-                    <InputTextArea @bind-Value="activity.Description" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label>Data:</label>
-                    <InputDate @bind-Value="activity.StartDate" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label>Hora de Início:</label>
-                    <InputText type="time" @bind-Value="activity.StartTime" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label>Hora de Término:</label>
-                    <InputText type="time" @bind-Value="activity.EndTime" class="form-control" />
-                </div>
-                <button type="button" class="btn btn-danger mt-2" @onclick="() => RemoverActivity(activity)">Remover</button>
+            <div class="col-md-6">
+                <label class="form-label">Categoria</label>
+                <InputText @bind-Value="NovoEvento.Category" class="form-control" />
             </div>
-        }
+            <div class="col-12">
+                <label class="form-label">Descrição</label>
+                <InputTextArea @bind-Value="NovoEvento.Description" class="form-control" rows="3" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Data de Início</label>
+                <InputDate @bind-Value="EventStartDate" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Hora de Início</label>
+                <InputText type="time" @bind-Value="EventStartTime" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Data de Fim</label>
+                <InputDate @bind-Value="EventEndDate" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Hora de Fim</label>
+                <InputText type="time" @bind-Value="EventEndTime" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Localização</label>
+                <InputText @bind-Value="NovoEvento.Location" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Capacidade</label>
+                <InputNumber @bind-Value="NovoEvento.Capacity" class="form-control" />
+            </div>
+        </div>
     </div>
-    <button type="button" class="btn btn-secondary mb-3" @onclick="AdicionarActivity">+ Adicionar Atividade</button>
 
-    <div>
-        <button type="submit" class="btn btn-primary">Criar Evento</button>
+    <!-- BILHETES -->
+    <div class="card p-4 mb-4 shadow-sm">
+        <h4 class="mb-3">🎟️ Bilhetes</h4>
+        <div class="ticket-container">
+            @foreach (var ticket in Tickets)
+            {
+                <div class="ticket-card">
+                    <div class="form-group">
+                        <label>Tipo de Bilhete</label>
+                        <InputText @bind-Value="ticket.TicketType" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Preço</label>
+                        <InputNumber @bind-Value="ticket.Price" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Quantidade</label>
+                        <InputNumber @bind-Value="ticket.QuantityAvailable" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Benefícios</label>
+                        <InputTextArea @bind-Value="ticket.Description" class="form-control" />
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm mt-2 w-100" @onclick="() => RemoverTicket(ticket)">Remover</button>
+                </div>
+            }
+        </div>
+        <button type="button" class="btn btn-outline-primary" @onclick="AdicionarTicket">+ Adicionar Bilhete</button>
+    </div>
+
+    <!-- ATIVIDADES -->
+    <div class="card p-4 mb-4 shadow-sm">
+        <h4 class="mb-3">📋 Atividades</h4>
+        <div class="ticket-container">
+            @foreach (var activity in Activities)
+            {
+                <div class="ticket-card">
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <InputText @bind-Value="activity.Name" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <InputTextArea @bind-Value="activity.Description" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <InputDate @bind-Value="activity.StartDate" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Hora de Início</label>
+                        <InputText type="time" @bind-Value="activity.StartTime" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Hora de Término</label>
+                        <InputText type="time" @bind-Value="activity.EndTime" class="form-control" />
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm mt-2 w-100" @onclick="() => RemoverActivity(activity)">Remover</button>
+                </div>
+            }
+        </div>
+        <button type="button" class="btn btn-outline-primary" @onclick="AdicionarActivity">+ Adicionar Atividade</button>
+    </div>
+
+    <div class="text-end">
+        <button type="submit" class="btn btn-success btn-lg">🚀 Criar Evento</button>
     </div>
 </EditForm>
 
@@ -136,18 +138,24 @@
     }
 
     .ticket-card {
-        border: 1px solid #ccc;
-        border-radius: 10px;
+        flex: 1 1 280px;
+        border: 1px solid #ddd;
+        border-radius: 12px;
         padding: 1rem;
-        width: 280px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        background-color: #f9f9f9;
+        background-color: #fff;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
     }
 
-    .ticket-card .form-group {
-        margin-bottom: 0.5rem;
+    .form-label {
+        font-weight: 500;
+    }
+
+    .card {
+        border-radius: 12px;
+        border: none;
     }
 </style>
+
 
 @code {
     private ApiService.EventDto NovoEvento = new();
