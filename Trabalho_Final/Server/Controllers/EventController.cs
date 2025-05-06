@@ -115,5 +115,15 @@ namespace Server.Controllers
 
             return Ok(new { message = "Participação cancelada com sucesso." });
         }
+        
+        [HttpGet("EventReport")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetReport()
+        {
+            var report = await _service.GetReportAsync();
+            return Ok(report);
+        }
+
+
     }
 }

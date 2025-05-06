@@ -164,7 +164,7 @@ namespace Server.Services
         {
             var eventos = await _context.Events.ToListAsync();
             var registros = await _context.Registrations.ToListAsync();
-            var atividades = await _context.Activities.ToListAsync(); // Supondo que você tenha atividades
+            var atividades = await _context.Activities.ToListAsync(); 
 
             var report = new EventReportDto
             {
@@ -198,10 +198,6 @@ namespace Server.Services
                     .GroupBy(e => e.Location)
                     .ToDictionary(g => g.Key ?? "Sem localidade", g => g.Count()),
 
-                EventoMaisProximo = eventos
-                    .Where(e => e.EventStartDate > DateTime.UtcNow)
-                    .OrderBy(e => e.EventStartDate)
-                    .FirstOrDefault()?.Name
             };
 
             return report;

@@ -68,9 +68,10 @@ public class ApiService
     }
     public async Task<EventReportDto> GetRelatorioEventosAsync()
     {
-        var response = await _httpClient.GetFromJsonAsync<EventReportDto>("api/event/report");
+        var response = await _httpClient.GetFromJsonAsync<EventReportDto>("api/Event/EventReport");
         return response!;
     }
+
     
     public async Task<bool> CancelarParticipacaoAsync(int userId, int eventId)
     {

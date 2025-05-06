@@ -17,8 +17,14 @@
              !NavigationManager.Uri.Contains("register"))
         {
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="create-event">
-                    <span class="bi bi-calendar-event-nav-menu" aria-hidden="true"></span> Criar Evento
+                <NavLink class="nav-link d-flex align-items-center gap-2 fs-5" href="Home_Organizador">
+                    <span class="bi bi-house-door"></span> Home
+                </NavLink>
+                <NavLink class="nav-link d-flex align-items-center gap-2 fs-5" href="create-event">
+                    <span class="bi bi-calendar-event"></span> Criar Evento
+                </NavLink>
+                <NavLink class="nav-link d-flex align-items-center gap-2 fs-5" href="EventReport">
+                    <span class="bi bi-bar-chart-line"></span> Relatório Evento
                 </NavLink>
             </div>
         }

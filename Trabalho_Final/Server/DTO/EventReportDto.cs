@@ -10,5 +10,5 @@ public class EventReportDto
     public double MediaParticipantes { get; set; }
     public Dictionary<string, int> Categorias { get; set; } = new();
     public Dictionary<string, int> Localidades { get; set; } = new();
-    public string? EventoMaisProximo { get; set; }
+    
 }
