@@ -1,0 +1,48 @@
+@page "/EventReport"
+@using Client.Services
+@inject ApiService ApiService
+
+
+<h3>Relatório Geral de Eventos</h3>
+
+@if (report == null)
+{
+<p>Carregando relatório...</p>
+}
+else
+{
+<div class="report-section">
+    <p><strong>Total de eventos:</strong> @report.TotalEventos</p>
+    <p><strong>Evento mais caro:</strong> @report.EventoMaisCaro</p>
+    <p><strong>Mais participantes:</strong> @report.EventoComMaisParticipantes</p>
+    <p><strong>Mais atividades:</strong> @report.EventoComMaisAtividades</p>
+    <p><strong>Mais longo:</strong> @report.EventoMaisLongo</p>
+    <p><strong>Média de participantes por evento:</strong> @report.MediaParticipantes:F2</p>
+    <p><strong>Evento mais próximo:</strong> @report.EventoMaisProximo</p>
+
+    <h4>Categorias</h4>
+    <ul>
+        @foreach (var cat in report.Categorias)
+        {
+        <li>@cat.Key: @cat.Value</li>
+        }
+    </ul>
+
+    <h4>Localidades</h4>
+    <ul>
+        @foreach (var loc in report.Localidades)
+        {
+        <li>@loc.Key: @loc.Value</li>
+        }
+    </ul>
+</div>
+}
+
+@code {
+private ApiService.EventReportDto? report;
+
+protected override async Task OnInitializedAsync()
+{
+report = await ApiService.GetRelatorioEventosAsync();
+}
+}

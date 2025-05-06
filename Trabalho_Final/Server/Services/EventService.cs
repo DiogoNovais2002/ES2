@@ -160,6 +160,52 @@ namespace Server.Services
                 Category = e.Category
             };
         }
+        public async Task<EventReportDto> GetReportAsync()
+        {
+            var eventos = await _context.Events.ToListAsync();
+            var registros = await _context.Registrations.ToListAsync();
+            var atividades = await _context.Activities.ToListAsync(); // Supondo que você tenha atividades
+
+            var report = new EventReportDto
+            {
+                TotalEventos = eventos.Count,
+                EventoMaisCaro = eventos.OrderByDescending(e => e.Capacity).FirstOrDefault()?.Name,
+                EventoComMaisParticipantes = registros
+                    .GroupBy(r => r.EventId)
+                    .OrderByDescending(g => g.Count())
+                    .Join(eventos, g => g.Key, e => e.Id, (g, e) => e.Name)
+                    .FirstOrDefault(),
+
+                EventoComMaisAtividades = atividades
+                    .GroupBy(a => a.EventId)
+                    .OrderByDescending(g => g.Count())
+                    .Join(eventos, g => g.Key, e => e.Id, (g, e) => e.Name)
+                    .FirstOrDefault(),
+
+                EventoMaisLongo = eventos
+                    .OrderByDescending(e => (e.EventEndDate - e.EventStartDate).TotalHours)
+                    .FirstOrDefault()?.Name,
+
+                MediaParticipantes = eventos.Count > 0
+                    ? registros.Count / (double)eventos.Count
+                    : 0,
+
+                Categorias = eventos
+                    .GroupBy(e => e.Category)
+                    .ToDictionary(g => g.Key ?? "Sem categoria", g => g.Count()),
+
+                Localidades = eventos
+                    .GroupBy(e => e.Location)
+                    .ToDictionary(g => g.Key ?? "Sem localidade", g => g.Count()),
+
+                EventoMaisProximo = eventos
+                    .Where(e => e.EventStartDate > DateTime.UtcNow)
+                    .OrderBy(e => e.EventStartDate)
+                    .FirstOrDefault()?.Name
+            };
+
+            return report;
+        }
 
     }
 }
