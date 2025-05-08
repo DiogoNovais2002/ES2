@@ -1,58 +1,77 @@
 @page "/Home_Participante"
 @using Client.Services
 @inject ApiService ApiService
-@inject UserService UserService
 @inject IJSRuntime JS
 @inject NavigationManager Nav
 
-<h3>Lista de Eventos</h3>
-
-<div class="search-bar">
-    <input type="text" @bind="searchTerm" placeholder="Pesquisar por nome" />
-
-    <select @bind="selectedCategory" class="Combobox-large">
-        <option value="">Categorias</option>
-        @foreach (var categoria in categorias)
-        {
-            <option value="@categoria">@categoria</option>
-        }
-    </select>
-    
-    <select @bind="selectedLocation" class="Combobox-large">
-        <option value="">Localidades</option>
-        @foreach (var loc in local)
-        {
-            <option value="@loc">@loc</option>
-        }
-    </select>
-
-    <select @bind="selectedTime" class="Combobox-large">
-        <option value="">Datas</option>
-        @foreach (var time in data)
-        {
-            <option value="@time">@time</option>
-        }
-    </select>
-
-    <button class="btn btn-secondary" @onclick="NavigateToMeusEventos">Meus Eventos</button>
-</div>
-
-@if (FilteredEventos.Any())
-{
-    <div class="event-container">
-        @foreach (var evento in FilteredEventos)
-        {
-            <EventCard Event="evento" OnParticipate="HandleParticipateClick" />
-        }
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="fw-bold">📋 Eventos Disponíveis </h1>
     </div>
-}
-else
-{
-    <p>Nenhum evento encontrado com os filtros selecionados.</p>
-}
+
+    <div class="search-bar d-flex flex-wrap gap-3 align-items-center mb-4">
+        <input type="text" class="form-control flex-grow-1" @bind="searchTerm" placeholder="🔍 Pesquisar por nome"/>
+        
+        <!-- Botão de Aplicar Filtros -->
+        <button class="btn btn-outline-success" @onclick="AplicarFiltros">Aplicar Filtros</button>
+
+        <select class="form-select w-auto" @bind="SelectedCategory">
+            <option value="">📂 Categorias</option>
+            @foreach (var categoria in categorias)
+            {
+                <option value="@categoria">@categoria</option>
+            }
+        </select>
+
+        <select class="form-select w-auto" @bind="SelectedLocation">
+            <option value="">📍 Localidades</option>
+            @foreach (var loc in local)
+            {
+                <option value="@loc">@loc</option>
+            }
+        </select>
+
+        <select class="form-select w-auto" @bind="SelectedTime">
+            <option value="">🕒 Datas</option>
+            @foreach (var time in data)
+            {
+                <option value="@time">@time</option>
+            }
+        </select>
+    </div>
+
+    @if (FilteredEventos.Any())
+    {
+        <div class="d-flex justify-content-center">
+            <div class="event-container row row-cols-auto g-3">
+                @foreach (var evento in FilteredEventos)
+                {
+                    <div class="col">
+                        <EventCard Event="evento" OnParticipate="HandleParticipateClick" />
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning mt-4">
+            Nenhum evento encontrado com os filtros selecionados.
+        </div>
+    }
+
+</div>
+<style>
+    .search-bar input, 
+    .search-bar select { min-width: 160px; max-width: 80% } 
+    .event-container { margin-top: 20px; } 
+    input::placeholder { color: #888; } 
+    select { cursor: pointer; }
+</style>
 
 @code {
     private List<ApiService.EventDto> eventos = new();
+    private List<ApiService.EventDto> todosEventos = new(); // todos os eventos sem filtro
     private List<ApiService.EventDto> meusEventosInscritos = new();
     private List<string> categorias = new();
     private List<string> local = new();
@@ -64,18 +83,135 @@ else
     private string selectedCategory = string.Empty;
     private string selectedLocation = string.Empty;
     private string selectedTime = string.Empty;
+    
+    private string SelectedCategory
+    {
+        get => selectedCategory;
+        set
+        {
+            if (selectedCategory != value)
+            {
+                selectedCategory = value;
+                UpdateDependentFiltersOnCategoryChange(); // Atualiza as opções de local e data
+            }
+        }
+    }
+
+    private string SelectedLocation
+    {
+        get => selectedLocation;
+        set
+        {
+            if (selectedLocation != value)
+            {
+                selectedLocation = value;
+                UpdateDependentFiltersOnLocationChange(); // Atualiza as opções de categoria e data
+            }
+        }
+    }
+    
+    private string SelectedTime
+    {
+        get => selectedTime;
+        set
+        {
+            if (selectedTime != value)
+            {
+                selectedTime = value;
+                UpdateDependentFiltersOnTimeChange(); // Atualiza as opções de categoria e local
+            }
+        }
+    }
+
+    private async Task AplicarFiltros()
+    {
+        // Filtrar eventos com base nos filtros atuais
+        await AtualizarFiltrosDependentes();
+
+        // Limpa os filtros
+        ResetFiltros();
+    }
+
+    private void ResetFiltros()
+    {
+        searchTerm = string.Empty;
+        selectedCategory = string.Empty;
+        selectedLocation = string.Empty;
+        selectedTime = string.Empty;
+    }
+
+    private async Task AtualizarFiltrosDependentes()
+    {
+        // Filtra os eventos de acordo com os filtros aplicados
+        var filtrados = todosEventos
+            .Where(e => string.IsNullOrEmpty(selectedCategory) || e.Category == selectedCategory)
+            .Where(e => string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation)
+            .Where(e => string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
+            .Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id)) // Exclui eventos aos quais o usuário já está inscrito
+            .ToList();
+
+        // Atualiza as listas de categorias, localidades e datas com base nos eventos filtrados
+        categorias = filtrados.Select(e => e.Category).Distinct().ToList();
+        local = filtrados.Select(e => e.Location).Distinct().ToList();
+        data = filtrados.Select(e => e.EventStartDate.ToString("yyyy-MM-dd")).Distinct().ToList();
+
+        eventos = filtrados;
+        StateHasChanged(); // Atualiza o componente
+    }
+
+    private void UpdateDependentFiltersOnCategoryChange()
+    {
+        // Filtra as localidades e datas com base na categoria selecionada
+        var filteredLocations = eventos.Where(e => e.Category == selectedCategory).Select(e => e.Location).Distinct().ToList();
+        var filteredDates = eventos.Where(e => e.Category == selectedCategory).Select(e => e.EventStartDate.ToString("yyyy-MM-dd")).Distinct().ToList();
+
+        local = filteredLocations;
+        data = filteredDates;
+    }
+
+    private void UpdateDependentFiltersOnLocationChange()
+    {
+        // Filtra as categorias e datas com base na localidade selecionada
+        var filteredCategories = eventos.Where(e => e.Location == selectedLocation).Select(e => e.Category).Distinct().ToList();
+        var filteredDates = eventos.Where(e => e.Location == selectedLocation).Select(e => e.EventStartDate.ToString("yyyy-MM-dd")).Distinct().ToList();
+
+        categorias = filteredCategories;
+        data = filteredDates;
+    }
+
+    private void UpdateDependentFiltersOnTimeChange()
+    {
+        // Filtra as categorias e localidades com base na data selecionada
+        if (!string.IsNullOrEmpty(selectedTime))
+        {
+            categorias = eventos.Where(e => e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
+                                .Select(e => e.Category)
+                                .Distinct()
+                                .ToList();
+            
+            local = eventos.Where(e => e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
+                           .Select(e => e.Location)
+                           .Distinct()
+                           .ToList();
+        }
+        else
+        {
+            categorias = eventos.Select(e => e.Category).Distinct().ToList();
+            local = eventos.Select(e => e.Location).Distinct().ToList();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        // 1. Verifica role antes de carregar dados
+        // Verifica se o tipo de usuário é "Participante"
         var type = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
         if (type != "Participante")
         {
-            Nav.NavigateTo("/");
+            Nav.NavigateTo("/"); 
             return;
         }
 
-        // 2. Lê userId e carrega dados
+        // Lê o userId do localStorage e carrega os dados
         var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
         int tempId;
         if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out tempId))
@@ -84,26 +220,30 @@ else
             await LoadData();
         }
 
-
         await LoadData();
     }
 
     private async Task LoadData()
     {
-        eventos = await ApiService.GetEventsAsync();
-        categorias = await ApiService.GetEventCategoriesAsync();
-        local = await ApiService.GetLocalidadesAsync();
-        data = await ApiService.GetDataAsync();
+        // Carrega todos os eventos e eventos aos quais o participante está inscrito
+        todosEventos = await ApiService.GetEventsAsync();
+        meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId.Value);
 
-        meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId.Value);  
+        // Filtra os eventos que o usuário ainda não está inscrito
+        eventos = todosEventos
+            .Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id))
+            .ToList();
 
-        eventos = eventos.Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id)).ToList();
+        // Inicializa as listas de categorias, localidades e datas com base em todos os eventos
+        categorias = eventos.Select(e => e.Category).Distinct().ToList();
+        local = eventos.Select(e => e.Location).Distinct().ToList();
+        data = eventos.Select(e => e.EventStartDate.ToString("yyyy-MM-dd")).Distinct().ToList();
     }
 
     private async Task HandleParticipateClick(int eventId)
     {
-
-        if (userId <= 0){
+        if (userId <= 0)
+        {
             await JS.InvokeVoidAsync("alert", "ID de usuário inválido. Faça login novamente.");
             return;
         }
@@ -127,11 +267,8 @@ else
     private void NavigateToMeusEventos() =>
         Nav.NavigateTo("/Meus_Eventos");
 
-    private IEnumerable<ApiService.EventDto> FilteredEventos =>
-        eventos.Where(e =>
-            (string.IsNullOrEmpty(searchTerm) || e.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
-            (string.IsNullOrEmpty(selectedCategory) || e.Category == selectedCategory) &&
-            (string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation) &&
-            (string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
+    private IEnumerable<ApiService.EventDto> FilteredEventos => eventos
+        .Where(e =>
+            (string.IsNullOrEmpty(searchTerm) || e.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
         );
 }

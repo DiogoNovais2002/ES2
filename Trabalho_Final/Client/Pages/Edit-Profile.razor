@@ -2,122 +2,182 @@
 @using Client.Services
 @inject ApiService ApiService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JS
 
-<h3>Editar Perfil</h3>
+<div class="edit-profile-container">
+    <h2 class="page-title">Editar Perfil</h2>
 
-@if (Sucesso)
-{
-    <div class="alert alert-success">Perfil atualizado com sucesso!</div>
-}
-@if (Erro)
-{
-    <div class="alert alert-danger">@MensagemErro</div>
-}
+    @if (Sucesso)
+    {
+        <div class="alert alert-success">Perfil atualizado com sucesso!</div>
+    }
+    @if (Erro)
+    {
+        <div class="alert alert-danger">@MensagemErro</div>
+    }
 
-<EditForm Model="@UserUpdate" OnValidSubmit="HandleValidSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+    <EditForm Model="@UserUpdate" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-    <div class="form-group">
-        <label>Nome:</label>
-        <InputText @bind-Value="UserUpdate.Name" class="form-control" />
-    </div>
+        <div class="card form-card">
+            <div class="form-group">
+                <label>Nome:</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user icon-left"></i>
+                    <InputText @bind-Value="UserUpdate.Name" class="form-control" />
+                </div>
+            </div>
 
-    <div class="form-group">
-        <label>E-mail:</label>
-        <InputText @bind-Value="UserUpdate.Email" class="form-control" />
-    </div>
+            <div class="form-group">
+                <label>E-mail:</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope icon-left"></i>
+                    <InputText @bind-Value="UserUpdate.Email" class="form-control" placeholder="exemplo@dominio.com" />
+                </div>
+            </div>
 
-    <div class="form-group">
-        <label>Número de Telefone:</label>
-        <InputText @bind-Value="UserUpdate.PhoneNumber" class="form-control" />
-    </div>
 
-    <div class="form-group">
-        <label>Nova Senha (opcional):</label>
-        <InputText type="password" @bind-Value="UserUpdate.Password" class="form-control" />
-    </div>
+            <div class="form-group">
+                <label>Número de Telefone:</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-phone icon-left"></i>
+                    <InputText @bind-Value="UserUpdate.PhoneNumber" class="form-control" />
+                </div>
+            </div>
 
-    <div>
-        <button type="submit" class="btn btn-primary">Atualizar Perfil</button>
-        <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
-    </div>
-</EditForm>
+            <div class="form-group">
+                <label>Nova Senha (opcional):</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock icon-left"></i>
+                    <InputText type="password" @bind-Value="UserUpdate.Password" class="form-control" />
+                </div>
+            </div>
+
+
+            <div class="form-buttons">
+                <button type="submit" class="btn btn-primary">💾 Atualizar</button>
+                <button type="button" class="btn btn-secondary" @onclick="Cancelar">❌ Cancelar</button>
+            </div>
+        </div>
+    </EditForm>
+</div>
 
 <style>
-    .form-group {
-        margin-bottom: 1rem;
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .icon-left {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+        color: #999;
     }
 
     .form-control {
         width: 100%;
-        padding: 0.5rem;
+        padding: 0.6rem 2.5rem;
+        border-radius: 0.5rem;
         border: 1px solid #ccc;
-        border-radius: 5px;
     }
 
-    .form-control:invalid {
-        border-color: #dc3545;
+    .edit-profile-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 1rem;
+    }
+
+    .page-title {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        color: #333;
+    }
+
+    .form-card {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    
+
+    .form-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
     }
 
     .alert {
-        padding: 1rem;
+        padding: 0.9rem;
+        border-radius: 6px;
         margin-bottom: 1rem;
-        border-radius: 5px;
+        font-weight: 500;
     }
 
     .alert-success {
         background-color: #d4edda;
         color: #155724;
+        border: 1px solid #c3e6cb;
     }
 
     .alert-danger {
         background-color: #f8d7da;
         color: #721c24;
+        border: 1px solid #f5c6cb;
     }
 
     .btn {
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
-        margin-right: 0.5rem;
+        padding: 0.5rem 1.2rem;
+        border-radius: 6px;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
     }
 
     .btn-primary {
         background-color: #007bff;
         color: white;
-        border: none;
     }
 
     .btn-secondary {
         background-color: #6c757d;
         color: white;
-        border: none;
     }
 </style>
+
 
 @code {
     private ApiService.UserUpdateDto UserUpdate = new();
     private string MensagemErro = string.Empty;
     private bool Sucesso = false;
     private bool Erro = false;
-    private readonly int UserId = 1;
+    private int UserId;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            var userData = await ApiService.GetUserAsync(UserId);
-            if (userData != null)
-            {
-                UserUpdate = userData;
-                UserUpdate.Id = UserId;
-                UserUpdate.Password = null;
-            }
-            else
+            var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+
+            if (!int.TryParse(userIdString, out UserId))
             {
                 Erro = true;
-                MensagemErro = "Utilizador não encontrado.";
+                MensagemErro = "ID de utilizador inválido.";
+                return;
             }
+
+            var userData = await ApiService.GetUserAsync(UserId);
+            UserUpdate = userData;
+            UserUpdate.Id = UserId;
+            UserUpdate.Password = null;
         }
         catch
         {

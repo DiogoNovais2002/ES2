@@ -5,49 +5,63 @@
 @inject NavigationManager Nav
 @inject IJSRuntime JS
 
-<h1>Dashboard Organizador</h1>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="fw-bold">📋 Dashboard do Organizador </h1>
+    </div>
 
-<div class="linha">
-    <h3>Gerir Eventos</h3>
-</div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h3 class="card-title">Gerir Eventos</h3>
 
-@if (EventoCriado)
-{
-    <p>Evento foi criado com sucesso!</p>
-}
-
-<h4 style="margin-top: 2rem">Lista Eventos</h4>
-
-@if (Eventos != null && Eventos.Any())
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Nome do Evento</th>
-                <th>Data</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var evento in Eventos)
+            @if (EventoCriado)
             {
-                <tr>
-                    <td>@evento.Id</td>
-                    <td>@evento.Name</td>
-                    <td>@evento.EventStartDate.ToString("dd/MM/yyyy")</td>
-                    <td>
-                        <a class="btn btn-primary btn-sm" href="/Edit-Event/@evento.Id">Editar</a>
-                    </td>
-                </tr>
+                <div class="alert alert-success mt-3" role="alert">
+                    ✅ Evento criado com sucesso!
+                </div>
             }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>Ainda não há eventos.</p>
-}
+
+            <h5 class="mt-4 mb-3">Lista de Eventos</h5>
+
+            @if (Eventos.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Nome do Evento</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var evento in Eventos)
+                            {
+                                <tr>
+                                    <td>@evento.Id</td>
+                                    <td>@evento.Name</td>
+                                    <td>@evento.EventStartDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <a class="btn btn-outline-primary btn-sm" href="/Edit-Event/@evento.Id">
+                                            ✏️ Editar
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mt-3" role="alert">
+                    ℹ️ Ainda não há eventos registados.
+                </div>
+            }
+        </div>
+    </div>
+</div>
 
 @code {
     private bool EventoCriado;
@@ -57,37 +71,13 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // 1. Verifica role antes de qualquer carregamento
         var type = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
         if (type != "Organizador")
         {
-            // redireciona quem não for Organizador
             Nav.NavigateTo("/");
             return;
         }
 
-        // 2. Carrega a lista de eventos para o Organizador
         Eventos = await ApiService.GetEventsAsync();
     }
 }
-
-<style>
-    .linha {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-    }
-
-    table {
-        margin-top: 1rem;
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th, td {
-        padding: 8px 12px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-    }
-</style>
