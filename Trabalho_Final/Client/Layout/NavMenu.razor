@@ -9,31 +9,50 @@
         </button>
     </div>
 </div>
+<div class="@NavMenuCssClass nav-scrollable position-relative" @onclick="ToggleNavMenu" style="height: 100vh;">
+    <nav class="flex-column d-flex h-100 justify-content-between">
+        <div>
+            @if (userTypeLoaded && userType == "Organizador" && 
+                 !NavigationManager.Uri.Contains("login") &&
+                 !NavigationManager.Uri.Contains("register"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="create-event">
+                        🎉 Criar Evento
+                    </NavLink>
+                    <NavLink class="nav-link" href="/Edit-Profile">
+                        🪪 Editar Perfil
+                    </NavLink>
+                </div>
+            }
+            @if (userTypeLoaded && userType == "Participante" && 
+                 !NavigationManager.Uri.Contains("login") &&
+                 !NavigationManager.Uri.Contains("register"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/Meus_Eventos">
+                        📋 Meus Eventos
+                    </NavLink>
+                    <NavLink class="nav-link" href="/Edit-Profile">
+                        🪪 Editar Perfil
+                    </NavLink>
+                </div>
+            }
+        </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        @if (userTypeLoaded && userType == "Organizador" && 
+        @if (userTypeLoaded && 
              !NavigationManager.Uri.Contains("login") &&
              !NavigationManager.Uri.Contains("register"))
         {
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="create-event">
-                    <span  aria-hidden="true"></span>🎉 Criar Evento
-                </NavLink>
-            </div>
-        }
-        @if (userTypeLoaded && userType == "Participante" && 
-             !NavigationManager.Uri.Contains("login") &&
-             !NavigationManager.Uri.Contains("register"))
-        {
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="/Meus_Eventos">
-                    <span  aria-hidden="true"></span>📋 Meus Eventos
+            <div class="nav-item px-3 mb-5">
+                <NavLink class="nav-link text-danger" href="#" @onclick="Logout">
+                    🚪 Logout
                 </NavLink>
             </div>
         }
     </nav>
 </div>
+
 
 @code {
     private bool collapseNavMenu = true;
@@ -79,6 +98,12 @@
             Console.WriteLine(userType);
             NavigationManager.NavigateTo("/Home_Organizador");
         }
+    }
+    private async Task Logout()
+    {
+        await Js.InvokeVoidAsync("localStorage.removeItem", "userType");
+        await Js.InvokeVoidAsync("localStorage.removeItem", "userId");
+        NavigationManager.NavigateTo("/login", forceLoad: true);
     }
 
 }

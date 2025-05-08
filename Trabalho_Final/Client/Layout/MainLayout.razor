@@ -7,18 +7,26 @@
         !NavigationManager.Uri.Contains("/register");
 }
 
-<div class="page">
-    @if (ShowNav)
-    {
-        <div class="sidebar">
-            <NavMenu />
-        </div>
+<div class="layout-wrapper">
+    <div class="page">
+        @if (ShowNav)
+        {
+            <div class="sidebar">
+                <NavMenu />
+            </div>
+        }
+
+        <main>
+            @Body
+        </main>
+    </div>
+</div>
+
+
+<style>
+    .layout-wrapper {
+        background-color: #f0f0f0; /* fundo cinzento */
+        min-height: 100vh;         /* ocupa toda a altura da janela */
     }
 
-    <main>
-        <div class="top-row px-4"></div>
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+</style>

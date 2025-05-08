@@ -4,61 +4,74 @@
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 
-<h3>Meus Eventos</h3>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="fw-bold">📌 Meus Eventos</h1>
+    </div>
+    
+    <div class="search-bar d-flex flex-wrap gap-3 align-items-center mb-4">
+        <input type="text" class="form-control flex-grow-1" @bind="searchTerm" placeholder="🔍 Pesquisar por nome"/>
+        
+        <!-- Botão de Aplicar Filtros -->
+        <button class="btn btn-outline-success" @onclick="AplicarFiltros">Aplicar Filtros</button>
 
-<div class="search-bar">
-    <input type="text" @bind="searchTerm" placeholder="Pesquisar por nome" />
+        <select class="form-select w-auto" @bind="selectedCategory">
+            <option value="">📂 Categorias</option>
+            @foreach (var categoria in categorias)
+            {
+                <option value="@categoria">@categoria</option>
+            }
+        </select>
 
-    <select @bind="selectedCategory" class="Combobox-large">
-        <option value="">Categorias</option>
-        @foreach (var categoria in categorias)
-        {
-            <option value="@categoria">@categoria</option>
-        }
-    </select>
+        <select class="form-select w-auto" @bind="selectedLocation">
+            <option value="">📍 Localidades</option>
+            @foreach (var loc in local)
+            {
+                <option value="@loc">@loc</option>
+            }
+        </select>
 
-    <select @bind="selectedLocation" class="Combobox-large">
-        <option value="">Localidades</option>
-        @foreach (var loc in local)
-        {
-            <option value="@loc">@loc</option>
-        }
-    </select>
+        <select class="form-select w-auto" @bind="selectedTime">
+            <option value="">🕒 Datas</option>
+            @foreach (var time in data)
+            {
+                <option value="@time">@time</option>
+            }
+        </select>
+    </div>
 
-    <select @bind="selectedTime" class="Combobox-large">
-        <option value="">Datas</option>
-        @foreach (var time in data)
-        {
-            <option value="@time">@time</option>
-        }
-    </select>
-
-    <button class="btn btn-secondary" @onclick="NavigateToAllEvents">Ver Todos os Eventos</button>
+    @if (isLoading)
+    {
+        <div class="loading">A carregar os seus eventos...</div>
+    }
+    else if (FilteredEventos.Any())
+    {
+        <div class="event-container">
+            @foreach (var evento in FilteredEventos)
+            {
+                <EventCard_MeusEventos Event="evento" OnCancelParticipation="HandleCancelarParticipacao"/>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="no-events">
+            <p>Não está inscrito em nenhum evento.</p>
+            <button class="btn btn-primary" @onclick="NavigateToAllEvents">Ver eventos disponíveis</button>
+        </div>
+    }
 </div>
 
-@if (isLoading)
-{
-    <div class="loading">A carregar os seus eventos...</div>
-}
-else if (FilteredEventos.Any())
-{
-    <div class="event-container">
-        @foreach (var evento in FilteredEventos)
-        {
-            <EventCard_MeusEventos Event="evento" OnCancelParticipation="HandleCancelarParticipacao" />
-        }
-    </div>
-}
-else
-{
-    <div class="no-events">
-        <p>Não está inscrito em nenhum evento.</p>
-        <button class="btn btn-primary" @onclick="NavigateToAllEvents">Ver eventos disponíveis</button>
-    </div>
-}
-
+<style>
+    .search-bar input, 
+    .search-bar select { min-width: 160px; max-width: 80% } 
+    .event-container { margin-top: 20px; } 
+    input::placeholder { color: #888; } 
+    select { cursor: pointer; }
+</style>
 @code {
     private List<ApiService.EventDto> meusEventos = new();
+    private List<ApiService.EventDto> todosEventos = new(); // todos os eventos sem filtro
     private List<string> categorias = new();
     private List<string> local = new();
     private List<string> data = new();
@@ -116,4 +129,39 @@ else
             (string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation) &&
             (string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
         );
+    
+    private void ResetFiltros()
+    {
+        searchTerm = string.Empty;
+        selectedCategory = string.Empty;
+        selectedLocation = string.Empty;
+        selectedTime = string.Empty;
+    }
+
+    private async Task AtualizarFiltrosDependentes()
+    {
+        // Filtra os eventos de acordo com os filtros aplicados
+        var filtrados = todosEventos
+            .Where(e => string.IsNullOrEmpty(selectedCategory) || e.Category == selectedCategory)
+            .Where(e => string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation)
+            .Where(e => string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
+            .ToList();
+
+        // Atualiza as listas de categorias, localidades e datas com base nos eventos filtrados
+        categorias = filtrados.Select(e => e.Category).Distinct().ToList();
+        local = filtrados.Select(e => e.Location).Distinct().ToList();
+        data = filtrados.Select(e => e.EventStartDate.ToString("yyyy-MM-dd")).Distinct().ToList();
+
+        meusEventos = filtrados;
+        StateHasChanged(); // Atualiza o componente
+    }
+    
+    private async Task AplicarFiltros()
+    {
+        // Filtrar eventos com base nos filtros atuais
+        await AtualizarFiltrosDependentes();
+
+        // Limpa os filtros
+        ResetFiltros();
+    }
 }

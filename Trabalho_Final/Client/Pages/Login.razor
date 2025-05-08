@@ -5,57 +5,172 @@
 
 <div class="login-container">
     <div class="login-card">
-        <div class="card-header"></div>
+        <div class="card-header2">
+            <h2>Bem-vindo</h2>
+            <p>Inicia sessão para continuares</p>
+        </div>
 
         <div class="card-body">
-            <h2>Login</h2>
             <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
-                <DataAnnotationsValidator/>
-                <ValidationSummary/>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
 
-                <div class="input-group">
-                    <span class="input-icon">
-                        <i class="fas fa-user"></i>
-                    </span>
-                    <InputText @bind-Value="loginModel.Email" class="form-control" placeholder="Email"/>
+                <div class="form-group">
+                    <label>Email</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope icon-left"></i>
+                        <InputText @bind-Value="loginModel.Email" class="form-control" placeholder="exemplo@gmail.com" autocomplete="username"/>
+                    </div>
                 </div>
 
-                <div class="input-group">
-                    <span class="input-icon">
-                        <i class="fas fa-lock"></i>
-                    </span>
-                    <InputText @bind-Value="loginModel.Password" class="form-control"
-                               type="@(_showPassword ? "text" : "password")"
-                               placeholder="Password"/>
-                    <button type="button" class="toggle-password" @onclick="TogglePasswordVisibility">
-                        <i class="fas @(_showPassword ? "fa-eye-slash" : "fa-eye")"></i>
-                    </button>
+                <div class="form-group">
+                    <label>Palavra-passe</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock icon-left"></i>
+                        <InputText @bind-Value="loginModel.Password" class="form-control"
+                                   type="@(_showPassword ? "text" : "password")"
+                                   placeholder="••••••••" autocomplete="current-password"/>
+                    </div>
                 </div>
 
                 <div class="options">
-                    <div>
-                        <input type="checkbox" id="remember"/>
-                        <label for="remember">Lembrar-me</label>
-                    </div>
+                    <label>
+                        <input type="checkbox" id="remember" />
+                        Lembrar-me
+                    </label>
                     <a href="#">Esqueceu a senha?</a>
                 </div>
 
                 <button type="submit" class="login-button">Entrar</button>
 
                 <div class="create-account">
-                    <a href="/register">Criar Conta</a>
+                    <span>Não tens conta?</span> <a href="/register">Criar Conta</a>
                 </div>
-            </EditForm>
 
-            @if (loginError != null)
-            {
-                <div class="alert alert-danger">
-                    @loginError
-                </div>
-            }
+                @if (loginError != null)
+                {
+                    <div class="error-message">
+                        @loginError
+                    </div>
+                }
+            </EditForm>
         </div>
     </div>
 </div>
+
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+        }
+
+    .login-card {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+    
+    .card-header2 h2 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-header2 p {
+        color: #555;
+    }
+
+    .form-group {
+        margin-bottom: 1.2rem;
+        text-align: left;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .icon-left {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+        color: #999;
+    }
+
+    .icon-button {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        background: none;
+        border: none;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #666;
+    }
+
+    .input-wrapper input {
+        padding-left: 2.5rem;
+        padding-right: 2.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.6rem 2.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid #ccc;
+    }
+
+    .options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .login-button {
+        background-color: blue;
+        border: none;
+        color: white;
+        padding: 0.8rem 1.2rem;
+        width: 100%;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+    .login-button:hover {
+        background-color: darkblue;
+    }
+
+    .create-account {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .create-account a {
+        font-weight: bold;
+        margin-left: 5px;
+        color: #007bff;
+        text-decoration: none;
+    }
+
+    .create-account a:hover {
+        text-decoration: underline;
+    }
+
+    .error-message {
+        margin-top: 1rem;
+        color: #dc3545;
+        font-weight: bold;
+    }
+</style>
 
 @code {
     private LoginRequest loginModel = new();
@@ -66,7 +181,7 @@
     {
         try
         {
-            var response = await Http.PostAsJsonAsync("http://localhost:5140/api/auth/login", loginModel);
+            var response = await Http.PostAsJsonAsync("api/auth/login", loginModel);
 
             if (response.IsSuccessStatusCode)
             {
