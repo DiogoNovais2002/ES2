@@ -202,6 +202,39 @@ namespace Server.Services
 
             return report;
         }
+        
+        public async Task<EventDetailReportDto?> GetReportByEventAsync(int eventId)
+        {
+            var ev = await _context.Events
+                .Include(e => e.Registrations)
+                .Include(e => e.Activities)
+                .FirstOrDefaultAsync(e => e.Id == eventId);
+
+            if (ev == null) 
+                return null;
+
+            return new EventDetailReportDto
+            {
+                // básicos
+                Id               = ev.Id,
+                OrganizerId      = ev.OrganizerId,
+                Name             = ev.Name,
+                Description      = ev.Description,
+                EventStartDate   = ev.EventStartDate,
+                EventEndDate     = ev.EventEndDate,
+                Location         = ev.Location,
+                Capacity         = ev.Capacity,
+                Category         = ev.Category,
+
+                // métricas
+                TotalParticipants = ev.Registrations.Count,
+                TotalActivities   = ev.Activities.Count,
+                DurationHours     = (ev.EventEndDate - ev.EventStartDate).TotalHours
+            };
+        }
+
+
+
 
     }
 }

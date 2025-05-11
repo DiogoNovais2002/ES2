@@ -1,0 +1,58 @@
+@page "/event-detail-report"
+@using Client.Services
+@inject Client.Services.ApiService ApiService
+
+<h3>Relatório de Evento</h3>
+
+@if (_events == null)
+{
+    <p>Carregando eventos…</p>
+}
+else
+{
+    <select @onchange="OnEventChanged" class="form-select">
+        <option value="">-- selecione um evento --</option>
+        @foreach (var ev in _events)
+        {
+            <option value="@ev.Id">@ev.Name</option>
+        }
+    </select>
+}
+
+@if (_detail != null)
+{
+    <div class="mt-4">
+        <h4>@_detail.Name</h4>
+        <p><strong>Descrição:</strong> @_detail.Description</p>
+        <p><strong>Local:</strong> @_detail.Location</p>
+        <p><strong>Início:</strong> @_detail.EventStartDate</p>
+        <p><strong>Fim:</strong> @_detail.EventEndDate</p>
+        <p><strong>Capacidade:</strong> @_detail.Capacity</p>
+        <p><strong>Categoria:</strong> @_detail.Category</p>
+
+        <h5 class="mt-3">Métricas</h5>
+        <p><strong>Total de participantes:</strong> @_detail.TotalParticipants</p>
+        <p><strong>Total de atividades:</strong> @_detail.TotalActivities</p>
+        <p><strong>Duração (h):</strong> @_detail.DurationHours:F1</p>
+    </div>
+}
+
+@code {
+    // siga o padrão de nomenclatura _camelCase para campos privados
+    private List<ApiService.EventDto>? _events;
+    private ApiService.EventDetailReportDto? _detail;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _events = await ApiService.GetEventsAsync();
+    }
+
+    private async Task OnEventChanged(ChangeEventArgs e)
+    {
+        _detail = null;
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            _detail = await ApiService.GetRelatorioEventoAsync(id);
+        }
+    }
+}
