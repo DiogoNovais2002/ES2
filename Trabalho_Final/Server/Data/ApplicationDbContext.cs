@@ -25,10 +25,10 @@ namespace Server.Data
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(builder);             // mantenha isso para o Identity
+            base.OnModelCreating(builder);            
             builder.HasDefaultSchema("public");
 
-            // -- configuração de User (não alterada) --
+           
             builder.Entity<User>().ToTable("users");
             builder.Entity<User>().Property(u => u.Id).HasColumnName("id");
             builder.Entity<User>().Property(u => u.Name).HasColumnName("name");
@@ -37,7 +37,7 @@ namespace Server.Data
             builder.Entity<User>().Property(u => u.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("NOW()");
             builder.Entity<User>().Property(u => u.UpdatedAt).HasColumnName("updatedat").HasDefaultValueSql("NOW()");
 
-            // -- configuração de Event (não alterada) --
+         
             builder.Entity<Event>().ToTable("events");
             builder.Entity<Event>().Property(e => e.Id).HasColumnName("id");
             builder.Entity<Event>().Property(e => e.OrganizerId).HasColumnName("organizerid");
@@ -56,7 +56,7 @@ namespace Server.Data
                    .HasForeignKey(e => e.OrganizerId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            // -- configuração de EventTicket (não alterada) --
+           
             builder.Entity<EventTicket>().ToTable("eventtickets");
             builder.Entity<EventTicket>().Property(et => et.Id).HasColumnName("id");
             builder.Entity<EventTicket>().Property(et => et.EventId).HasColumnName("eventid");
@@ -72,7 +72,7 @@ namespace Server.Data
                    .HasForeignKey(et => et.EventId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            // -- configuração de Activity (ajustada apenas o WithMany) --
+           
             builder.Entity<Activity>().ToTable("activities");
             builder.Entity<Activity>().Property(a => a.Id).HasColumnName("id");
             builder.Entity<Activity>().Property(a => a.EventId).HasColumnName("eventid");
@@ -84,7 +84,7 @@ namespace Server.Data
             builder.Entity<Activity>().Property(a => a.UpdatedAt).HasColumnName("updatedat").HasDefaultValueSql("NOW()");
             builder.Entity<Activity>()
                    .HasOne(a => a.Event)
-                   .WithMany(e => e.Activities)          // agora mapeia para Event.Activities
+                   .WithMany(e => e.Activities)          
                    .HasForeignKey(a => a.EventId)
                    .OnDelete(DeleteBehavior.Cascade);
 
@@ -98,7 +98,7 @@ namespace Server.Data
             builder.Entity<Registration>().Property(r => r.Status).HasColumnName("status").HasDefaultValue("Active");
             builder.Entity<Registration>()
                    .HasOne(r => r.Event)
-                   .WithMany(e => e.Registrations)      // agora mapeia para Event.Registrations
+                   .WithMany(e => e.Registrations)      
                    .HasForeignKey(r => r.EventId)
                    .OnDelete(DeleteBehavior.Cascade);
             builder.Entity<Registration>()
@@ -112,21 +112,21 @@ namespace Server.Data
                    .HasForeignKey(r => r.TicketId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            // -- resto das entidades (sem alteração) --
+          
             builder.Entity<ActivityRegistration>().ToTable("activityregistrations");
-            // ... configurações de ActivityRegistration ...
+           
 
             builder.Entity<Message>().ToTable("messages");
-            // ... configurações de Message ...
+           
 
             builder.Entity<Report>().ToTable("reports");
-            // ... configurações de Report ...
+           
 
             builder.Entity<Feedback>().ToTable("feedback");
-            // ... configurações de Feedback ...
+          
 
             builder.Entity<Permission>().ToTable("permissions");
-            // ... configurações de Permission ...
+           
         }
     }
 }

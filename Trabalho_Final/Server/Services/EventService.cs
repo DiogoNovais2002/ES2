@@ -229,7 +229,9 @@ namespace Server.Services
                 // métricas
                 TotalParticipants = ev.Registrations.Count,
                 TotalActivities   = ev.Activities.Count,
-                DurationHours     = (ev.EventEndDate - ev.EventStartDate).TotalHours
+                DurationHours = ev.Activities.Count > 0
+                    ? ev.Activities.Sum(a => (a.ActivityEndDate - a.ActivityStartDate).TotalHours)
+                    : (ev.EventEndDate - ev.EventStartDate).TotalHours
             };
         }
 
