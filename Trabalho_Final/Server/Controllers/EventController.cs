@@ -1,7 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.DTO;
 using Server.Services;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Server.Controllers
 {
@@ -17,6 +17,7 @@ namespace Server.Controllers
             _service = service;
         }
 
+        // GET /api/Event/{id}
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetEventById(int id)
@@ -28,6 +29,7 @@ namespace Server.Controllers
             return Ok(eventDto);
         }
 
+        // GET /api/Event
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetEvents()
@@ -36,6 +38,20 @@ namespace Server.Controllers
             return Ok(events);
         }
 
+        // POST /api/Event
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> CreateEvent([FromBody] EventDto eventDto)
+        {
+            var eventId = await _service.CreateAsync(eventDto);
+            return Ok(new
+            {
+                message = "Evento criado com sucesso!",
+                eventId
+            });
+        }
+
+        // PUT /api/Event/{id}
         [HttpPut("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> UpdateEventAsync(int id, [FromBody] EventDto evento)
@@ -47,42 +63,19 @@ namespace Server.Controllers
             return Ok(new { message = "Evento atualizado com sucesso!" });
         }
 
-        [HttpGet("categories")]
+        // DELETE participação: DELETE /api/Event/{eventId}/participants/{userId}
+        [HttpDelete("{eventId}/participants/{userId}")]
         [AllowAnonymous]
-        public async Task<ActionResult<List<string>>> GetCategories()
+        public async Task<IActionResult> CancelParticipation(int eventId, int userId)
         {
-            var categories = await _service.GetCategoriesAsync();
-            return Ok(categories);
+            var success = await _service.CancelParticipationAsync(eventId, userId);
+            if (!success)
+                return NotFound(new { message = "Inscrição não encontrada." });
+
+            return Ok(new { message = "Participação cancelada com sucesso." });
         }
 
-        [HttpGet("localidades")]
-        [AllowAnonymous]
-        public async Task<ActionResult<List<string>>> GetLocalidades()
-        {
-            var localidades = await _service.GetLocalidadesAsync();
-            return Ok(localidades);
-        }
-
-        [HttpGet("datas")]
-        [AllowAnonymous]
-        public async Task<ActionResult<List<string>>> GetDatas()
-        {
-            var datas = await _service.GetDatasAsync();
-            return Ok(datas);
-        }
-
-        [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> CreateEvent([FromBody] EventDto eventDto)
-        {
-            var eventId = await _service.CreateAsync(eventDto);
-            return Ok(new
-            {
-                message = "Evento criado com sucesso!",
-                eventId = eventId
-            });
-        }
-
+        // POST participação: POST /api/Event/participate
         [HttpPost("participate")]
         [AllowAnonymous]
         public async Task<IActionResult> Participate([FromBody] RegistrationDto registrationDto)
@@ -94,6 +87,7 @@ namespace Server.Controllers
             return Ok(new { message = result.Message });
         }
 
+        // GET /api/Event/participant/{userId}
         [HttpGet("participant/{userId}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetEventsByParticipant(int userId)
@@ -105,25 +99,53 @@ namespace Server.Controllers
             return Ok(events);
         }
 
-        [HttpDelete("{eventId}/participants/{userId}")]
+        // GET /api/Event/categories
+        [HttpGet("categories")]
         [AllowAnonymous]
-        public async Task<IActionResult> CancelParticipation(int eventId, int userId)
+        public async Task<ActionResult<List<string>>> GetCategories()
         {
-            var success = await _service.CancelParticipationAsync(eventId, userId);
-            if (!success)
-                return NotFound(new { message = "Inscrição não encontrada." });
-
-            return Ok(new { message = "Participação cancelada com sucesso." });
+            var categories = await _service.GetCategoriesAsync();
+            return Ok(categories);
         }
-        
+
+        // GET /api/Event/localidades
+        [HttpGet("localidades")]
+        [AllowAnonymous]
+        public async Task<ActionResult<List<string>>> GetLocalidades()
+        {
+            var localidades = await _service.GetLocalidadesAsync();
+            return Ok(localidades);
+        }
+
+        // GET /api/Event/datas
+        [HttpGet("datas")]
+        [AllowAnonymous]
+        public async Task<ActionResult<List<string>>> GetDatas()
+        {
+            var datas = await _service.GetDatasAsync();
+            return Ok(datas);
+        }
+
+        // GET /api/Event/EventReport
         [HttpGet("EventReport")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetReport()
+        public async Task<IActionResult> GetGeneralReport()
         {
             var report = await _service.GetReportAsync();
             return Ok(report);
         }
 
+        // GET /api/Event/EventReport/{eventId}
+        [HttpGet("EventReport/{eventId:int}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetReportByEvent(int eventId)
+        {
+            var detail = await _service.GetReportByEventAsync(eventId);
+            if (detail == null)
+                return NotFound(new { message = "Evento não encontrado." });
+
+            return Ok(detail);
+        }
 
     }
 }
