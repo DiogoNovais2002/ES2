@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Server.DTO;
 using Server.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Server.Data;
 
 namespace Server.Controllers
 {
@@ -11,10 +13,12 @@ namespace Server.Controllers
     public class EventController : ControllerBase
     {
         private readonly EventService _service;
+        private readonly ApplicationDbContext _context;
 
-        public EventController(EventService service)
+        public EventController(EventService service, ApplicationDbContext context)
         {
             _service = service;
+            _context = context;
         }
 
         [HttpGet("{id}")]
@@ -105,6 +109,28 @@ namespace Server.Controllers
             return Ok(events);
         }
 
+        [HttpGet("participant/{userId}/registrations")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetRegistrationsWithTickets(int userId)
+        {
+            var registrations = await _context.Registrations
+                .Where(r => r.UserId == userId)
+                .Include(r => r.Event)
+                .Include(r => r.Ticket)
+                .Select(r => new
+                {
+                    EventId = r.Event.Id,
+                    EventName = r.Event.Name,
+                    TicketId = r.Ticket.Id,
+                    TicketType = r.Ticket.TicketType,
+                    TicketPrice = r.Ticket.Price,
+                    RegistrationDate = r.RegistrationDate
+                })
+                .ToListAsync();
+
+            return Ok(registrations);
+        }
+
         [HttpDelete("{eventId}/participants/{userId}")]
         [AllowAnonymous]
         public async Task<IActionResult> CancelParticipation(int eventId, int userId)
@@ -115,7 +141,7 @@ namespace Server.Controllers
 
             return Ok(new { message = "Participação cancelada com sucesso." });
         }
-        
+
         [HttpGet("EventReport")]
         [AllowAnonymous]
         public async Task<IActionResult> GetReport()
@@ -123,7 +149,5 @@ namespace Server.Controllers
             var report = await _service.GetReportAsync();
             return Ok(report);
         }
-
-
     }
 }

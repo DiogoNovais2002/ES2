@@ -1,0 +1,165 @@
+@page "/evento-detalhes/{eventId:int}"
+@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+@using Client.Services
+
+<h3 class="page-title"><i class="fas fa-info-circle"></i> Detalhes do Evento</h3>
+
+@if (evento != null)
+{
+    <div class="event-details-card">
+        <h2>@evento.Name</h2>
+
+        <p><i class="fas fa-align-left icon"></i> <strong>Descrição:</strong> @evento.Description</p>
+        <p><i class="fas fa-calendar-day icon"></i> <strong>Data de Início:</strong> @evento.EventStartDate.ToString("dd/MM/yyyy HH:mm")</p>
+        <p><i class="fas fa-calendar-check icon"></i> <strong>Data de Fim:</strong> @evento.EventEndDate.ToString("dd/MM/yyyy HH:mm")</p>
+        <p><i class="fas fa-map-marker-alt icon"></i> <strong>Local:</strong> @evento.Location</p>
+        <p><i class="fas fa-tags icon"></i> <strong>Categoria:</strong> @evento.Category</p>
+        <p><i class="fas fa-users icon"></i> <strong>Capacidade:</strong> @evento.Capacity</p>
+
+        @if (bilhetes.Any())
+        {
+            <div class="tickets-section">
+                <h4>Bilhetes Disponíveis</h4>
+                <div class="row g-3">
+                    @foreach (var ticket in bilhetes)
+                    {
+                        <div class="col-md-4">
+                            <div class="ticket-card">
+                                <p><strong>Tipo:</strong> @ticket.TicketType</p>
+                                <p><strong>Preço:</strong> @ticket.Price €</p>
+                                <p><strong>Descrição:</strong> @ticket.Description</p>
+                                <button class="btn btn-success w-100" @onclick="() => ComprarBilhete(ticket.Id)">Comprar</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <p>Nenhum bilhete disponível no momento.</p>
+        }
+
+        <button class="btn-back" @onclick='() => NavigationManager.NavigateTo("/Home_Participante")'>
+            <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+    </div>
+}
+else
+{
+    <p>Evento não encontrado.</p>
+}
+
+@code {
+    [Parameter]
+    public int eventId { get; set; }
+
+    private ApiService.EventDto? evento;
+    private List<ApiService.EventTicketDto> bilhetes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        evento = await ApiService.GetEventByIdAsync(eventId);
+        bilhetes = await ApiService.GetTicketsByEventIdAsync(eventId);
+    }
+
+    private async Task ComprarBilhete(int ticketId)
+    {
+        var userIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+        if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out var userId))
+        {
+            var success = await ApiService.ParticiparEventoAsync(userId, eventId, ticketId);
+            if (success)
+            {
+                await JS.InvokeVoidAsync("alert", "Inscrição realizada com sucesso!");
+                NavigationManager.NavigateTo("/Meus_Eventos");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Falha ao realizar a inscrição.");
+            }
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Utilizador inválido. Faça login novamente.");
+        }
+    }
+}
+
+<style>
+    .page-title {
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .event-details-card {
+        background-color: #f9f9f9;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        max-width: 900px;
+        margin: auto;
+        color: #333;
+    }
+
+    .event-details-card h2 {
+        margin-bottom: 1rem;
+        color: #0056b3;
+    }
+
+    .event-details-card p {
+        margin: 0.5rem 0;
+        font-size: 1rem;
+    }
+
+    .icon {
+        margin-right: 8px;
+        color: #007bff;
+    }
+
+    .btn-back {
+        margin-top: 2rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-back:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-back i {
+        margin-right: 5px;
+    }
+
+    .tickets-section {
+        margin-top: 2rem;
+    }
+
+    .ticket-card {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 1rem;
+        height: 100%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+    }
+
+    .btn-success:hover {
+        background-color: #218838;
+    }
+</style>

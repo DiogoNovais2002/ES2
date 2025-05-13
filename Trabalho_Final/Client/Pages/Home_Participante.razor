@@ -11,8 +11,7 @@
 
     <div class="search-bar d-flex flex-wrap gap-3 align-items-center mb-4">
         <input type="text" class="form-control flex-grow-1" @bind="searchTerm" placeholder="🔍 Pesquisar por nome"/>
-        
-        <!-- Botão de Aplicar Filtros -->
+
         <button class="btn btn-outline-success" @onclick="AplicarFiltros">Aplicar Filtros</button>
 
         <select class="form-select w-auto" @bind="SelectedCategory">
@@ -47,7 +46,7 @@
                 @foreach (var evento in FilteredEventos)
                 {
                     <div class="col">
-                        <EventCard Event="evento" OnParticipate="HandleParticipateClick" />
+                        <EventCard Event="evento" OnParticipate="NavigateToEventDetails" />
                     </div>
                 }
             </div>
@@ -71,7 +70,7 @@
 
 @code {
     private List<ApiService.EventDto> eventos = new();
-    private List<ApiService.EventDto> todosEventos = new(); // todos os eventos sem filtro
+    private List<ApiService.EventDto> todosEventos = new();
     private List<ApiService.EventDto> meusEventosInscritos = new();
     private List<string> categorias = new();
     private List<string> local = new();
@@ -83,7 +82,7 @@
     private string selectedCategory = string.Empty;
     private string selectedLocation = string.Empty;
     private string selectedTime = string.Empty;
-    
+
     private string SelectedCategory
     {
         get => selectedCategory;
@@ -92,7 +91,7 @@
             if (selectedCategory != value)
             {
                 selectedCategory = value;
-                UpdateDependentFiltersOnCategoryChange(); // Atualiza as opções de local e data
+                UpdateDependentFiltersOnCategoryChange();
             }
         }
     }
@@ -105,11 +104,11 @@
             if (selectedLocation != value)
             {
                 selectedLocation = value;
-                UpdateDependentFiltersOnLocationChange(); // Atualiza as opções de categoria e data
+                UpdateDependentFiltersOnLocationChange();
             }
         }
     }
-    
+
     private string SelectedTime
     {
         get => selectedTime;
@@ -118,17 +117,14 @@
             if (selectedTime != value)
             {
                 selectedTime = value;
-                UpdateDependentFiltersOnTimeChange(); // Atualiza as opções de categoria e local
+                UpdateDependentFiltersOnTimeChange();
             }
         }
     }
 
     private async Task AplicarFiltros()
     {
-        // Filtrar eventos com base nos filtros atuais
         await AtualizarFiltrosDependentes();
-
-        // Limpa os filtros
         ResetFiltros();
     }
 
@@ -142,26 +138,23 @@
 
     private async Task AtualizarFiltrosDependentes()
     {
-        // Filtra os eventos de acordo com os filtros aplicados
         var filtrados = todosEventos
             .Where(e => string.IsNullOrEmpty(selectedCategory) || e.Category == selectedCategory)
             .Where(e => string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation)
             .Where(e => string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
-            .Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id)) // Exclui eventos aos quais o usuário já está inscrito
+            .Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id))
             .ToList();
 
-        // Atualiza as listas de categorias, localidades e datas com base nos eventos filtrados
         categorias = filtrados.Select(e => e.Category).Distinct().ToList();
         local = filtrados.Select(e => e.Location).Distinct().ToList();
         data = filtrados.Select(e => e.EventStartDate.ToString("yyyy-MM-dd")).Distinct().ToList();
 
         eventos = filtrados;
-        StateHasChanged(); // Atualiza o componente
+        StateHasChanged();
     }
 
     private void UpdateDependentFiltersOnCategoryChange()
     {
-        // Filtra as localidades e datas com base na categoria selecionada
         var filteredLocations = eventos.Where(e => e.Category == selectedCategory).Select(e => e.Location).Distinct().ToList();
         var filteredDates = eventos.Where(e => e.Category == selectedCategory).Select(e => e.EventStartDate.ToString("yyyy-MM-dd")).Distinct().ToList();
 
@@ -171,7 +164,6 @@
 
     private void UpdateDependentFiltersOnLocationChange()
     {
-        // Filtra as categorias e datas com base na localidade selecionada
         var filteredCategories = eventos.Where(e => e.Location == selectedLocation).Select(e => e.Category).Distinct().ToList();
         var filteredDates = eventos.Where(e => e.Location == selectedLocation).Select(e => e.EventStartDate.ToString("yyyy-MM-dd")).Distinct().ToList();
 
@@ -181,14 +173,13 @@
 
     private void UpdateDependentFiltersOnTimeChange()
     {
-        // Filtra as categorias e localidades com base na data selecionada
         if (!string.IsNullOrEmpty(selectedTime))
         {
             categorias = eventos.Where(e => e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
                                 .Select(e => e.Category)
                                 .Distinct()
                                 .ToList();
-            
+
             local = eventos.Where(e => e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
                            .Select(e => e.Location)
                            .Distinct()
@@ -203,15 +194,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Verifica se o tipo de usuário é "Participante"
         var type = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
         if (type != "Participante")
         {
-            Nav.NavigateTo("/"); 
+            Nav.NavigateTo("/");
             return;
         }
 
-        // Lê o userId do localStorage e carrega os dados
         var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
         int tempId;
         if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out tempId))
@@ -225,43 +214,21 @@
 
     private async Task LoadData()
     {
-        // Carrega todos os eventos e eventos aos quais o participante está inscrito
         todosEventos = await ApiService.GetEventsAsync();
         meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId.Value);
 
-        // Filtra os eventos que o usuário ainda não está inscrito
         eventos = todosEventos
             .Where(e => !meusEventosInscritos.Any(ie => ie.Id == e.Id))
             .ToList();
 
-        // Inicializa as listas de categorias, localidades e datas com base em todos os eventos
         categorias = eventos.Select(e => e.Category).Distinct().ToList();
         local = eventos.Select(e => e.Location).Distinct().ToList();
         data = eventos.Select(e => e.EventStartDate.ToString("yyyy-MM-dd")).Distinct().ToList();
     }
 
-    private async Task HandleParticipateClick(int eventId)
+    private void NavigateToEventDetails(int eventId)
     {
-        if (userId <= 0)
-        {
-            await JS.InvokeVoidAsync("alert", "ID de usuário inválido. Faça login novamente.");
-            return;
-        }
-
-        bool success = await ApiService.ParticiparEventoAsync(userId.Value, eventId);
-        if (success)
-        {
-            await JS.InvokeVoidAsync("alert", "Inscrição realizada com sucesso!");
-            meusEventosInscritos = await ApiService.GetEventsByParticipantAsync(userId.Value);
-            var eventoInscrito = eventos.FirstOrDefault(e => e.Id == eventId);
-            if (eventoInscrito != null) eventos.Remove(eventoInscrito);
-
-            StateHasChanged();
-        }
-        else
-        {
-            await JS.InvokeVoidAsync("alert", "Não foi possível realizar a inscrição. Tente novamente.");
-        }
+        Nav.NavigateTo($"/evento-detalhes/{eventId}");
     }
 
     private void NavigateToMeusEventos() =>
