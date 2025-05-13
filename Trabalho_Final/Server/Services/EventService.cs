@@ -95,19 +95,30 @@ namespace Server.Services
 
         public async Task<(bool Success, string Message)> ParticipateAsync(RegistrationDto dto)
         {
+            // Verifica se o evento existe
             var evento = await _context.Events.FindAsync(dto.EventId);
             if (evento == null)
                 return (false, "Evento não encontrado.");
 
-            if (dto.TicketId == 0)
-                dto.TicketId = 1;
+            // Verifica se o bilhete existe e pertence ao evento
+            var ticket = await _context.EventTickets
+                .FirstOrDefaultAsync(t => t.Id == dto.TicketId && t.EventId == dto.EventId);
 
-            var exists = await _context.Registrations
+            if (ticket == null)
+                return (false, "Bilhete inválido para este evento.");
+
+            // Verifica se o utilizador já está inscrito
+            var jaInscrito = await _context.Registrations
                 .AnyAsync(r => r.UserId == dto.UserId && r.EventId == dto.EventId);
 
-            if (exists)
-                return (false, "Já inscrito.");
+            if (jaInscrito)
+                return (false, "Já estás inscrito neste evento.");
 
+            // Verifica se há bilhetes disponíveis
+            if (ticket.QuantityAvailable <= 0)
+                return (false, "Bilhete esgotado.");
+
+            // Cria a inscrição
             var registration = new Registration
             {
                 UserId = dto.UserId,
@@ -117,11 +128,15 @@ namespace Server.Services
                 Status = "Ativa"
             };
 
+            // Reduz a quantidade disponível
+            ticket.QuantityAvailable--;
+
             _context.Registrations.Add(registration);
             await _context.SaveChangesAsync();
 
             return (true, "Inscrição realizada com sucesso.");
         }
+
 
         public async Task<List<EventDto>> GetEventsByParticipantAsync(int userId)
         {

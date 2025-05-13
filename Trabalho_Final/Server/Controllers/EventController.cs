@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.DTO;
 using Server.Services;
+using Microsoft.EntityFrameworkCore;
+using Server.Data;
 
 namespace Server.Controllers
 {
@@ -11,10 +13,12 @@ namespace Server.Controllers
     public class EventController : ControllerBase
     {
         private readonly EventService _service;
+        private readonly ApplicationDbContext _context;
 
-        public EventController(EventService service)
+        public EventController(EventService service, ApplicationDbContext context)
         {
             _service = service;
+            _context = context;
         }
 
         // GET /api/Event/{id}
@@ -99,6 +103,29 @@ namespace Server.Controllers
             return Ok(events);
         }
 
+        // ✅ NOVO ENDPOINT: /api/Event/participant/{userId}/registrations
+        [HttpGet("participant/{userId}/registrations")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetRegistrationsWithTickets(int userId)
+        {
+            var registrations = await _context.Registrations
+                .Where(r => r.UserId == userId)
+                .Include(r => r.Event)
+                .Include(r => r.Ticket)
+                .Select(r => new
+                {
+                    EventId = r.Event.Id,
+                    EventName = r.Event.Name,
+                    TicketId = r.Ticket.Id,
+                    TicketType = r.Ticket.TicketType,
+                    TicketPrice = r.Ticket.Price,
+                    RegistrationDate = r.RegistrationDate
+                })
+                .ToListAsync();
+
+            return Ok(registrations);
+        }
+
         // GET /api/Event/categories
         [HttpGet("categories")]
         [AllowAnonymous]
@@ -146,6 +173,5 @@ namespace Server.Controllers
 
             return Ok(detail);
         }
-
     }
 }

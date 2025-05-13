@@ -40,13 +40,13 @@ public class ApiService
         return await _httpClient.GetFromJsonAsync<List<string>>("api/Event/datas");
     }
    
-    public async Task<bool> ParticiparEventoAsync(int userId, int eventId)
+    public async Task<bool> ParticiparEventoAsync(int userId, int eventId, int ticketId)
     {
         var registration = new
         {
             UserId = userId,
             EventId = eventId,
-            
+            TicketId = ticketId
         };
 
         var response = await _httpClient.PostAsJsonAsync("api/event/participate", registration);
