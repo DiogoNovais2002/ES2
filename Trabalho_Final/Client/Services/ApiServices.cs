@@ -71,6 +71,11 @@ public class ApiService
         var response = await _httpClient.GetFromJsonAsync<EventReportDto>("api/Event/EventReport");
         return response!;
     }
+    public async Task<EventDetailReportDto?> GetRelatorioEventoAsync(int eventId)
+    {
+        return await _httpClient
+            .GetFromJsonAsync<EventDetailReportDto>($"api/Event/EventReport/{eventId}");
+    }
 
     
     public async Task<bool> CancelarParticipacaoAsync(int userId, int eventId)
@@ -217,6 +222,27 @@ public class ApiService
         public object EventDate { get; set; }
     }
     
+    public class EventDetailReportDto
+    {
+        public object Duration;
+
+        public int Id { get; set; }
+        public int OrganizerId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public DateTime EventStartDate { get; set; }
+        public DateTime EventEndDate { get; set; }
+        public string Location { get; set; } = string.Empty;
+        public int Capacity { get; set; }
+        public string? Category { get; set; }
+        
+        public int TotalParticipants { get; set; }
+        public int TotalActivities   { get; set; }
+        
+        public double DurationHours { get; set; }
+    }
+
+    
     public class EventTicketDto
     {
         public int Id { get; set; }
@@ -238,6 +264,8 @@ public class ApiService
         public Dictionary<string, int> Categorias { get; set; } = new();
         public Dictionary<string, int> Localidades { get; set; } = new();
     }
+    
+
     
     private class CreateEventResponse
     {
@@ -268,4 +296,6 @@ public class ApiService
         public string? PhoneNumber { get; set; }
         public string? Password { get; set; }
     }
+
+
 }
