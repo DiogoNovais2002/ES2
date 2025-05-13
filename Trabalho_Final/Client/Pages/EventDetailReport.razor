@@ -2,76 +2,89 @@
 @using Client.Services
 @inject ApiService ApiService
 
-<h3 class="mb-4">Relatório de Evento</h3>
+<div class="container py-4">
+  <h3 class="mb-4">Relatório de Evento</h3>
 
-@if (_events == null)
-{
-    <p>Carregando eventos…</p>
-}
-else
-{
-    <div class="mb-4">
-        <select @onchange="OnEventChanged" class="form-select w-50">
-            <option value="">-- selecione um evento --</option>
-            @foreach (var ev in _events)
-            {
-                <option value="@ev.Id">@ev.Name</option>
-            }
-        </select>
-    </div>
-}
+  @* Dropdown para seleção de evento *@
+  @if (_events == null)
+  {
+      <p>Carregando eventos…</p>
+  }
+  else
+  {
+      <select @onchange="OnEventChanged" class="form-select mb-4 w-50">
+          <option value="">-- selecione um evento --</option>
+          @foreach (var ev in _events)
+          {
+              <option value="@ev.Id">@ev.Name</option>
+          }
+      </select>
+  }
 
-@if (_detail != null)
-{
-    <div class="card mb-4 w-75">
-        <div class="card-header bg-primary text-white">
+  @* Card de detalhes e métricas *@
+  @if (_detail != null)
+  {
+      <div class="mx-auto" style="max-width:600px;">
+        <div class="card border-secondary mb-4">
+          <div class="card-header bg-transparent border-0 text-primary">
             <h4 class="mb-0">@_detail.Name</h4>
-        </div>
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Descrição</dt>
-                <dd class="col-sm-9">@_detail.Description</dd>
+          </div>
+          <div class="card-body p-3">
+            <div class="row g-4">
+              @* Coluna de dados básicos *@
+              <div class="col-12 col-md-6">
+                <dl class="row mb-0">
+                  <dt class="col-sm-4">Descrição</dt>
+                  <dd class="col-sm-8">@_detail.Description</dd>
 
-                <dt class="col-sm-3">Local</dt>
-                <dd class="col-sm-9">@_detail.Location</dd>
+                  <dt class="col-sm-4">Local</dt>
+                  <dd class="col-sm-8">@_detail.Location</dd>
 
-                <dt class="col-sm-3">Início</dt>
-                <dd class="col-sm-9">
+                  <dt class="col-sm-4">Início</dt>
+                  <dd class="col-sm-8">
                     @_detail.EventStartDate.ToString("dd/MM/yyyy HH:mm")
-                </dd>
+                  </dd>
 
-                <dt class="col-sm-3">Fim</dt>
-                <dd class="col-sm-9">
+                  <dt class="col-sm-4">Fim</dt>
+                  <dd class="col-sm-8">
                     @_detail.EventEndDate.ToString("dd/MM/yyyy HH:mm")
-                </dd>
+                  </dd>
 
-                <dt class="col-sm-3">Capacidade</dt>
-                <dd class="col-sm-9">@_detail.Capacity</dd>
+                  <dt class="col-sm-4">Capacidade</dt>
+                  <dd class="col-sm-8">@_detail.Capacity</dd>
 
-                <dt class="col-sm-3">Categoria</dt>
-                <dd class="col-sm-9">@_detail.Category</dd>
-            </dl>
+                  <dt class="col-sm-4">Categoria</dt>
+                  <dd class="col-sm-8">@_detail.Category</dd>
+                </dl>
+              </div>
 
-            <hr />
-
-            <h5>Métricas</h5>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between">
+              @* Coluna de métricas com ícones e badges *@
+              <div class="col-12 col-md-6">
+                <h5 class="mb-3">Métricas</h5>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <i class="bi bi-people-fill me-2 text-secondary"></i>
                     <span>Total de participantes</span>
-                    <strong>@_detail.TotalParticipants</strong>
-                </li>
-                <li class="list-group-item d-flex justify-content-between">
+                    <span class="badge bg-primary rounded-pill">@_detail.TotalParticipants</span>
+                  </li>
+                  <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <i class="bi bi-list-task me-2 text-secondary"></i>
                     <span>Total de atividades</span>
-                    <strong>@_detail.TotalActivities</strong>
-                </li>
-                <li class="list-group-item d-flex justify-content-between">
+                    <span class="badge bg-success rounded-pill">@_detail.TotalActivities</span>
+                  </li>
+                  <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <i class="bi bi-clock-fill me-2 text-secondary"></i>
                     <span>Duração (horas)</span>
-                    <strong>@_detail.DurationHours.ToString("F1")</strong>
-                </li>
-            </ul>
+                    <span class="badge bg-warning rounded-pill">@_detail.DurationHours.ToString("F1")</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
-}
+      </div>
+  }
+</div>
 
 @code {
     private List<ApiService.EventDto>? _events;
