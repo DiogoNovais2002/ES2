@@ -186,6 +186,9 @@ namespace Server.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("eventid");
 
+                    b.Property<int?>("EventId1")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
@@ -200,6 +203,8 @@ namespace Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EventId");
+
+                    b.HasIndex("EventId1");
 
                     b.ToTable("activities", "public");
                 });
@@ -476,6 +481,9 @@ namespace Server.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("eventid");
 
+                    b.Property<int?>("EventId1")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("RegistrationDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -500,6 +508,8 @@ namespace Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EventId");
+
+                    b.HasIndex("EventId1");
 
                     b.HasIndex("TicketId");
 
@@ -696,6 +706,10 @@ namespace Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Server.Models.Event", null)
+                        .WithMany("Activities")
+                        .HasForeignKey("EventId1");
+
                     b.Navigation("Event");
                 });
 
@@ -797,6 +811,10 @@ namespace Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Server.Models.Event", null)
+                        .WithMany("Registrations")
+                        .HasForeignKey("EventId1");
+
                     b.HasOne("Server.Models.EventTicket", "Ticket")
                         .WithMany()
                         .HasForeignKey("TicketId")
@@ -824,6 +842,13 @@ namespace Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Event");
+                });
+
+            modelBuilder.Entity("Server.Models.Event", b =>
+                {
+                    b.Navigation("Activities");
+
+                    b.Navigation("Registrations");
                 });
 #pragma warning restore 612, 618
         }
