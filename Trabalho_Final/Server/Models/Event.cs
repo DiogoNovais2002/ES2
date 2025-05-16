@@ -21,6 +21,6 @@ namespace Server.Models
 
         // ← Adicionei estas duas propriedades de navegação:
         public virtual ICollection<Registration> Registrations { get; set; } = new List<Registration>();
-        public virtual ICollection<Activity>    Activities    { get; set; } = new List<Activity>();
+        public virtual ICollection<Activity>? Activities { get; set; } = new List<Activity>();
     }
 }

@@ -49,6 +49,10 @@ namespace Server.Data
             builder.Entity<Event>().Property(e => e.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("NOW()");
             builder.Entity<Event>().Property(e => e.UpdatedAt).HasColumnName("updatedat").HasDefaultValueSql("NOW()");
             builder.Entity<Event>().HasOne(e => e.Organizer).WithMany().HasForeignKey(e => e.OrganizerId).OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<Event>()
+                .HasMany(e => e.Activities)
+                .WithOne(a => a.Event)
+                .HasForeignKey(a => a.EventId);
 
             builder.Entity<EventTicket>().ToTable("eventtickets");
             builder.Entity<EventTicket>().Property(et => et.Id).HasColumnName("id");
@@ -70,7 +74,7 @@ namespace Server.Data
             builder.Entity<Activity>().Property(a => a.ActivityEndDate).HasColumnName("activityenddate");
             builder.Entity<Activity>().Property(a => a.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("NOW()");
             builder.Entity<Activity>().Property(a => a.UpdatedAt).HasColumnName("updatedat").HasDefaultValueSql("NOW()");
-            builder.Entity<Activity>().HasOne(a => a.Event).WithMany().HasForeignKey(a => a.EventId).OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<Activity>().HasOne(a => a.Event).WithMany(e => e.Activities).HasForeignKey(a => a.EventId).OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Registration>().ToTable("registrations");
             builder.Entity<Registration>().Property(r => r.Id).HasColumnName("id");
@@ -79,7 +83,7 @@ namespace Server.Data
             builder.Entity<Registration>().Property(r => r.TicketId).HasColumnName("ticketid");
             builder.Entity<Registration>().Property(r => r.RegistrationDate).HasColumnName("registrationdate").HasDefaultValueSql("NOW()");
             builder.Entity<Registration>().Property(r => r.Status).HasColumnName("status").HasDefaultValue("Active");
-            builder.Entity<Registration>().HasOne(r => r.Event).WithMany().HasForeignKey(r => r.EventId).OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<Registration>().HasOne(r => r.Event).WithMany(e => e.Registrations).HasForeignKey(r => r.EventId).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<Registration>().HasOne(r => r.User).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<Registration>().HasOne(r => r.Ticket).WithMany().HasForeignKey(r => r.TicketId).OnDelete(DeleteBehavior.Cascade);
 

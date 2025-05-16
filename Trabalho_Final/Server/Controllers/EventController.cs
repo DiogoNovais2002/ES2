@@ -111,11 +111,20 @@ namespace Server.Controllers
             var registrations = await _context.Registrations
                 .Where(r => r.UserId == userId)
                 .Include(r => r.Event)
+                .ThenInclude(e => e.Activities)
                 .Include(r => r.Ticket)
                 .Select(r => new
                 {
                     EventId = r.Event.Id,
                     EventName = r.Event.Name,
+                    Activities = r.Event.Activities.Select(a => new
+                    {
+                        a.Id,
+                        a.Name,
+                        a.Description,
+                        a.ActivityStartDate,
+                        a.ActivityEndDate
+                    }).ToList(),
                     TicketId = r.Ticket.Id,
                     TicketType = r.Ticket.TicketType,
                     TicketPrice = r.Ticket.Price,
@@ -125,6 +134,7 @@ namespace Server.Controllers
 
             return Ok(registrations);
         }
+
 
         // GET /api/Event/categories
         [HttpGet("categories")]
