@@ -201,6 +201,27 @@ public class ApiService
         }
     }
     
+    public async Task<EventTicketDto?> GetUserTicketForEventAsync(int userId, int eventId)
+    {
+        var response = await _httpClient.GetAsync($"api/Event/participant/{userId}/registrations");
+        if (!response.IsSuccessStatusCode) return null;
+
+        var registrations = await response.Content.ReadFromJsonAsync<List<RegistrationWithTicketDto>>();
+
+        var reg = registrations?.FirstOrDefault(r => r.EventId == eventId);
+        if (reg == null) return null;
+
+        return new EventTicketDto
+        {
+            Id = reg.TicketId,
+            EventId = reg.EventId,
+            TicketType = reg.TicketType,
+            Price = reg.TicketPrice,
+            Description = "" // se quiseres puxar descrição, atualiza o backend para incluí-la
+        };
+    }
+
+    
     private class ApiResponse
     {
         public string Message { get; set; }
@@ -297,5 +318,14 @@ public class ApiService
         public string? Password { get; set; }
     }
 
+    public class RegistrationWithTicketDto
+    {
+        public int EventId { get; set; }
+        public string EventName { get; set; }
+        public int TicketId { get; set; }
+        public string TicketType { get; set; }
+        public decimal TicketPrice { get; set; }
+        public DateTime RegistrationDate { get; set; }
+    }
 
 }

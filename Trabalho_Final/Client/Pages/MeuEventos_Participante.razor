@@ -8,11 +8,10 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="fw-bold">📌 Meus Eventos</h1>
     </div>
-    
+
     <div class="search-bar d-flex flex-wrap gap-3 align-items-center mb-4">
         <input type="text" class="form-control flex-grow-1" @bind="searchTerm" placeholder="🔍 Pesquisar por nome"/>
-        
-        <!-- Botão de Aplicar Filtros -->
+
         <button class="btn btn-outline-success" @onclick="AplicarFiltros">Aplicar Filtros</button>
 
         <select class="form-select w-auto" @bind="selectedCategory">
@@ -49,7 +48,16 @@
         <div class="event-container">
             @foreach (var evento in FilteredEventos)
             {
-                <EventCard_MeusEventos Event="evento" OnCancelParticipation="HandleCancelarParticipacao"/>
+                <div class="event-card p-3 mb-3 bg-light rounded shadow-sm">
+                    <h5 class="fw-bold">@evento.Name</h5>
+                    <p><strong>Data:</strong> @evento.EventStartDate.ToString("dd/MM/yyyy")</p>
+                    <p><strong>Descrição:</strong> @evento.Description</p>
+
+                    <div class="d-flex gap-2 mt-2">
+                        <button class="btn btn-primary" @onclick="() => VerDetalhes(evento.Id)">Ver Detalhes</button>
+                        <button class="btn btn-danger" @onclick="() => HandleCancelarParticipacao(evento.Id)">Cancelar Participação</button>
+                    </div>
+                </div>
             }
         </div>
     }
@@ -63,15 +71,17 @@
 </div>
 
 <style>
-    .search-bar input, 
-    .search-bar select { min-width: 160px; max-width: 80% } 
-    .event-container { margin-top: 20px; } 
-    input::placeholder { color: #888; } 
+    .search-bar input,
+    .search-bar select { min-width: 160px; max-width: 80% }
+    .event-container { margin-top: 20px; }
+    .event-card { border: 1px solid #ddd; }
+    input::placeholder { color: #888; }
     select { cursor: pointer; }
 </style>
+
 @code {
     private List<ApiService.EventDto> meusEventos = new();
-    private List<ApiService.EventDto> todosEventos = new(); // todos os eventos sem filtro
+    private List<ApiService.EventDto> todosEventos = new();
     private List<string> categorias = new();
     private List<string> local = new();
     private List<string> data = new();
@@ -122,6 +132,9 @@
     private void NavigateToAllEvents() =>
         NavigationManager.NavigateTo("/Home_Participante");
 
+    private void VerDetalhes(int eventId) =>
+        NavigationManager.NavigateTo($"/meus-eventos-detalhes/{eventId}");
+
     private IEnumerable<ApiService.EventDto> FilteredEventos =>
         meusEventos.Where(e =>
             (string.IsNullOrEmpty(searchTerm) || e.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
@@ -129,7 +142,7 @@
             (string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation) &&
             (string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
         );
-    
+
     private void ResetFiltros()
     {
         searchTerm = string.Empty;
@@ -140,28 +153,23 @@
 
     private async Task AtualizarFiltrosDependentes()
     {
-        // Filtra os eventos de acordo com os filtros aplicados
         var filtrados = todosEventos
             .Where(e => string.IsNullOrEmpty(selectedCategory) || e.Category == selectedCategory)
             .Where(e => string.IsNullOrEmpty(selectedLocation) || e.Location == selectedLocation)
             .Where(e => string.IsNullOrEmpty(selectedTime) || e.EventStartDate.ToString("yyyy-MM-dd") == selectedTime)
             .ToList();
 
-        // Atualiza as listas de categorias, localidades e datas com base nos eventos filtrados
         categorias = filtrados.Select(e => e.Category).Distinct().ToList();
         local = filtrados.Select(e => e.Location).Distinct().ToList();
         data = filtrados.Select(e => e.EventStartDate.ToString("yyyy-MM-dd")).Distinct().ToList();
 
         meusEventos = filtrados;
-        StateHasChanged(); // Atualiza o componente
+        StateHasChanged();
     }
-    
+
     private async Task AplicarFiltros()
     {
-        // Filtrar eventos com base nos filtros atuais
         await AtualizarFiltrosDependentes();
-
-        // Limpa os filtros
         ResetFiltros();
     }
 }
