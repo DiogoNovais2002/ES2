@@ -249,9 +249,5 @@ namespace Server.Services
                     : (ev.EventEndDate - ev.EventStartDate).TotalHours
             };
         }
-
-
-
-
     }
 }

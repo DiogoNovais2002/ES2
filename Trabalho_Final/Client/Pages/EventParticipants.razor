@@ -1,0 +1,80 @@
+@page "/eventos/participantes"
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<h3>Participantes do Evento</h3>
+
+<button class="btn btn-secondary mb-3" @onclick="VoltarAtras">⬅️ Voltar</button>
+
+@if (participants == null)
+{
+    <p>A carregar...</p>
+}
+else if (participants.Count == 0)
+{
+    <p>Não há participantes registados.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr><th>Nome</th><th>Email</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var user in participants)
+        {
+            <tr><td>@user.Name</td><td>@user.Email</td></tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private int EventId;
+    private List<UserDto> participants;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(Nav.Uri);
+        var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var idStr = queryParams.Get("eventId");
+
+        if (int.TryParse(idStr, out int parsedId))
+        {
+            EventId = parsedId;
+
+            try
+            {
+                participants = await Http.GetFromJsonAsync<List<UserDto>>($"api/Event/{EventId}/participants");
+            }
+            catch
+            {
+                participants = new();
+            }
+        }
+        else
+        {
+            participants = new();
+        }
+    }
+
+    private async Task VoltarAtras()
+    {
+        var userType = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
+
+        if (userType == "Organizador")
+            Nav.NavigateTo("/Home_Organizador");
+        else if (userType == "Participante")
+            Nav.NavigateTo("/Meus_Eventos");
+        else
+            Nav.NavigateTo("/");
+    }
+
+    public class UserDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+    }
+}
