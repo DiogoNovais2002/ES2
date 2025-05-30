@@ -183,5 +183,23 @@ namespace Server.Controllers
 
             return Ok(detail);
         }
+        
+        [HttpGet("{eventId}/participants")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetParticipantsByEvent(int eventId)
+        {
+            var participants = await _context.Registrations
+                .Where(r => r.EventId == eventId)
+                .Include(r => r.User)
+                .Select(r => new UserDto
+                {
+                    Id = r.User.Id,
+                    Name = r.User.Name,
+                    Email = r.User.Email
+                })
+                .ToListAsync();
+
+            return Ok(participants);
+        }
     }
 }

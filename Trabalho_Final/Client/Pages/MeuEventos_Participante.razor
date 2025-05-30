@@ -58,6 +58,8 @@
                         <button class="btn btn-danger" @onclick="() => HandleCancelarParticipacao(evento.Id)">Cancelar Participação</button>
                     </div>
                 </div>
+                <EventCard_MeusEventos Event="evento" OnCancelParticipation="HandleCancelarParticipacao"/>
+                <a class="btn btn-info" href="/eventos/participantes?eventId=@evento.Id">Ver Participantes</a>
             }
         </div>
     }
