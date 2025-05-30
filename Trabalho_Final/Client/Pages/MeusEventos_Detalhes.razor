@@ -67,6 +67,31 @@
             </div>
         </div>
 
+        <div class="card mb-4 shadow-sm border-start border-info border-5">
+            <div class="card-header bg-light text-dark">
+                <strong><i class="fas fa-bullhorn text-info me-2"></i>Avisos do Organizador</strong>
+            </div>
+            <div class="card-body">
+                @if (avisos.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var aviso in avisos.OrderByDescending(a => a.SentAt))
+                        {
+                            <li class="list-group-item">
+                                <strong>@aviso.Title</strong><br />
+                                @aviso.Content <br />
+                                <small class="text-muted">🕒 @aviso.SentAt.ToString("dd/MM/yyyy HH:mm")</small>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-muted">Nenhum aviso foi enviado até agora.</div>
+                }
+            </div>
+        </div>
+
         <button class="btn btn-outline-secondary" @onclick="Voltar">
             <i class="fas fa-arrow-left me-1"></i> Voltar
         </button>
@@ -90,6 +115,7 @@
     private ApiService.EventDto? evento;
     private ApiService.EventTicketDto? bilhete;
     private List<ApiService.ActivityDto> atividades = new();
+    private List<ApiService.OrganizerAnnouncementDto> avisos = new();
     private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
@@ -105,7 +131,8 @@
 
         evento = await ApiService.GetEventByIdAsync(eventId);
         atividades = await ApiService.GetActivitiesByEventIdAsync(eventId);
-        bilhete = await ApiService.GetUserTicketForEventAsync(userId, eventId); // Garante que esse método esteja implementado
+        bilhete = await ApiService.GetUserTicketForEventAsync(userId, eventId);
+        avisos = await ApiService.GetAvisosByEventIdAsync(eventId);
 
         isLoading = false;
     }

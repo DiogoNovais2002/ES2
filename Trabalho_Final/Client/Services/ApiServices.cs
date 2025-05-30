@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Client.Pages;
 
 namespace Client.Services;
 using System.Net.Http.Json;
@@ -326,6 +327,45 @@ public class ApiService
         public string TicketType { get; set; }
         public decimal TicketPrice { get; set; }
         public DateTime RegistrationDate { get; set; }
+    }
+
+    public async Task<bool> EnviarAnuncioAsync(NovoAviso.OrganizerAnnouncementDto anuncio)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/OrganizerAnnouncement", anuncio);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao enviar o aviso: {ex.Message}");
+            return false;
+        }
+    }
+
+    public void SetAuthToken(string token)
+    {
+        if (!string.IsNullOrEmpty(token))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+        else
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = null;
+        }
+    }
+    
+    public class OrganizerAnnouncementDto
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public DateTime SentAt { get; set; }
+    }
+
+    public async Task<List<OrganizerAnnouncementDto>> GetAvisosByEventIdAsync(int eventId)
+    {
+        return await _httpClient.GetFromJsonAsync<List<OrganizerAnnouncementDto>>($"api/OrganizerAnnouncement/event/{eventId}")
+               ?? new List<OrganizerAnnouncementDto>();
     }
 
 }
