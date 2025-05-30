@@ -21,6 +21,8 @@ namespace Server.Data
         public DbSet<Report> Reports { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Permission> Permissions { get; set; }
+        public DbSet<OrganizerAnnouncement> OrganizerAnnouncements { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -130,6 +132,19 @@ namespace Server.Data
             builder.Entity<Permission>().Property(p => p.CanManageUsers).HasColumnName("canmanageusers").HasDefaultValue(false);
             builder.Entity<Permission>().Property(p => p.CanViewReports).HasColumnName("canviewreports").HasDefaultValue(false);
             builder.Entity<Permission>().HasOne(p => p.User).WithMany().HasForeignKey(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
+            
+            builder.Entity<OrganizerAnnouncement>().ToTable("organizerannouncements");
+            builder.Entity<OrganizerAnnouncement>().Property(o => o.Id).HasColumnName("id");
+            builder.Entity<OrganizerAnnouncement>().Property(o => o.EventId).HasColumnName("eventid");
+            builder.Entity<OrganizerAnnouncement>().Property(o => o.Title).HasColumnName("title");
+            builder.Entity<OrganizerAnnouncement>().Property(o => o.Content).HasColumnName("content");
+            builder.Entity<OrganizerAnnouncement>().Property(o => o.SentAt).HasColumnName("sentat").HasDefaultValueSql("NOW()");
+            builder.Entity<OrganizerAnnouncement>()
+                .HasOne(o => o.Event)
+                .WithMany()
+                .HasForeignKey(o => o.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

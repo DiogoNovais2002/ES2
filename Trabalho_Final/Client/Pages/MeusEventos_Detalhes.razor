@@ -1,0 +1,141 @@
+@page "/meus-eventos-detalhes/{eventId:int}"
+@using Client.Services
+@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+<div class="container mt-4">
+    <h3 class="mb-4"><i class="fas fa-file-alt me-2"></i>Detalhes do Evento</h3>
+
+    @if (isLoading)
+    {
+        <div class="alert alert-info">🔄 A carregar dados...</div>
+    }
+    else if (evento != null)
+    {
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title fw-bold">@evento.Name</h4>
+                <p><strong>📄 Descrição:</strong> @evento.Description</p>
+                <p><strong>📅 Data:</strong> @evento.EventStartDate.ToString("dd/MM/yyyy HH:mm")</p>
+                <p><strong>📍 Local:</strong> @evento.Location</p>
+                <p><strong>🏷️ Categoria:</strong> @evento.Category</p>
+                <p><strong>👥 Capacidade:</strong> @evento.Capacity</p>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm border-start border-pink border-5">
+            <div class="card-header bg-light text-dark">
+                <strong><i class="fas fa-ticket-alt text-pink me-2"></i>Bilhete</strong>
+            </div>
+            <div class="card-body">
+                @if (bilhete != null)
+                {
+                    <p><strong>Tipo:</strong> @bilhete.TicketType</p>
+                    <p><strong>Preço:</strong> @bilhete.Price €</p>
+                    <p><strong>Descrição:</strong> @bilhete.Description</p>
+                }
+                else
+                {
+                    <div class="text-danger">❗ Não foi possível carregar o bilhete.</div>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm border-start border-purple border-5">
+            <div class="card-header bg-light text-dark">
+                <strong><i class="fas fa-running text-purple me-2"></i>Atividades</strong>
+            </div>
+            <div class="card-body">
+                @if (atividades.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var act in atividades)
+                        {
+                            <li class="list-group-item">
+                                <strong>@act.Name</strong> <br />
+                                @act.Description <br />
+                                ⏰ @act.ActivityStartDate.ToString("dd/MM/yyyy HH:mm") - @act.ActivityEndDate.ToString("dd/MM/yyyy HH:mm")
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-muted">Não há atividades registadas para este evento.</div>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm border-start border-info border-5">
+            <div class="card-header bg-light text-dark">
+                <strong><i class="fas fa-bullhorn text-info me-2"></i>Avisos do Organizador</strong>
+            </div>
+            <div class="card-body">
+                @if (avisos.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var aviso in avisos.OrderByDescending(a => a.SentAt))
+                        {
+                            <li class="list-group-item">
+                                <strong>@aviso.Title</strong><br />
+                                @aviso.Content <br />
+                                <small class="text-muted">🕒 @aviso.SentAt.ToString("dd/MM/yyyy HH:mm")</small>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-muted">Nenhum aviso foi enviado até agora.</div>
+                }
+            </div>
+        </div>
+
+        <button class="btn btn-outline-secondary" @onclick="Voltar">
+            <i class="fas fa-arrow-left me-1"></i> Voltar
+        </button>
+    }
+    else
+    {
+        <div class="alert alert-warning">⚠️ Evento não encontrado.</div>
+    }
+</div>
+
+<style>
+    .text-pink { color: #e83e8c; }
+    .text-purple { color: #6f42c1; }
+    .border-pink { border-color: #e83e8c !important; }
+    .border-purple { border-color: #6f42c1 !important; }
+</style>
+
+@code {
+    [Parameter] public int eventId { get; set; }
+
+    private ApiService.EventDto? evento;
+    private ApiService.EventTicketDto? bilhete;
+    private List<ApiService.ActivityDto> atividades = new();
+    private List<ApiService.OrganizerAnnouncementDto> avisos = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+        if (!int.TryParse(userIdStr, out var userId))
+        {
+            await JS.InvokeVoidAsync("alert", "Utilizador inválido.");
+            return;
+        }
+
+        isLoading = true;
+
+        evento = await ApiService.GetEventByIdAsync(eventId);
+        atividades = await ApiService.GetActivitiesByEventIdAsync(eventId);
+        bilhete = await ApiService.GetUserTicketForEventAsync(userId, eventId);
+        avisos = await ApiService.GetAvisosByEventIdAsync(eventId);
+
+        isLoading = false;
+    }
+
+    private void Voltar() => NavigationManager.NavigateTo("/Meus_Eventos");
+}
