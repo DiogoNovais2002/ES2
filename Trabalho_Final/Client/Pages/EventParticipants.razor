@@ -3,33 +3,50 @@
 @inject HttpClient Http
 @inject IJSRuntime JS
 
-<h3>Participantes do Evento</h3>
-
-<button class="btn btn-secondary mb-3" @onclick="VoltarAtras">⬅️ Voltar</button>
+<div class="container mt-4">
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">👥 Participantes do Evento</h2>
+    <button class="btn btn-outline-primary" @onclick="VoltarAtras">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </button>
+</div>
 
 @if (participants == null)
 {
-    <p>A carregar...</p>
+    <div class="text-center text-muted">
+        <div class="spinner-border text-secondary" role="status"></div>
+        <p class="mt-2">A carregar participantes...</p>
+    </div>
 }
 else if (participants.Count == 0)
 {
-    <p>Não há participantes registados.</p>
+    <div class="alert alert-warning text-center" role="alert">
+        Não há participantes registados.
+    </div>
 }
 else
 {
-    <table class="table">
-        <thead>
-        <tr><th>Nome</th><th>Email</th></tr>
-        </thead>
-        <tbody>
-        @foreach (var user in participants)
-        {
-            <tr><td>@user.Name</td><td>@user.Email</td></tr>
-        }
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle">
+            <thead class="table-light">
+            <tr>
+                <th>Nome</th>
+                <th>Email</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var user in participants)
+            {
+                <tr>
+                    <td>@user.Name</td>
+                    <td>@user.Email</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
 }
-
+</div>
 @code {
     private int EventId;
     private List<UserDto> participants;

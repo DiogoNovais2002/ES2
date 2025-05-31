@@ -54,12 +54,11 @@
                     <p><strong>Descrição:</strong> @evento.Description</p>
 
                     <div class="d-flex gap-2 mt-2">
-                        <button class="btn btn-primary" @onclick="() => VerDetalhes(evento.Id)">Ver Detalhes</button>
-                        <button class="btn btn-danger" @onclick="() => HandleCancelarParticipacao(evento.Id)">Cancelar Participação</button>
+                        <button class="btn btn-outline-primary" @onclick="() => VerDetalhes(evento.Id)">Ver Detalhes</button>
+                        <button class="btn btn-outline-danger" @onclick="() => HandleCancelarParticipacao(evento.Id)">Cancelar Participação</button>
+                        <a class="btn btn-outline-info" href="/eventos/participantes?eventId=@evento.Id">Ver Participantes</a>
                     </div>
                 </div>
-                <EventCard_MeusEventos Event="evento" OnCancelParticipation="HandleCancelarParticipacao"/>
-                <a class="btn btn-info" href="/eventos/participantes?eventId=@evento.Id">Ver Participantes</a>
             }
         </div>
     }

@@ -1,6 +1,7 @@
 @page "/Create-Event"
 @using Client.Services
 @inject ApiService ApiService
+@inject IJSRuntime JS
 
 <div class="container mt-4">
     
@@ -176,9 +177,19 @@
     private bool Sucesso = false;
     private bool Erro = false;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        NovoEvento = new ApiService.EventDto { OrganizerId = 1 };
+        var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+
+        if (int.TryParse(userIdString, out var userId))
+        {
+            NovoEvento = new ApiService.EventDto { OrganizerId = userId };
+        }
+        else
+        {
+            // Se o userId for inválido, trata aqui como quiseres (ex: redirecionar ou lançar erro)
+            NovoEvento = new ApiService.EventDto();
+        }
         Tickets.Add(new TicketInput());
         Activities.Add(new ActivityInput());
     }

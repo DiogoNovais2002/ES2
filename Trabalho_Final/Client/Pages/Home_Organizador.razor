@@ -79,6 +79,18 @@
 
     protected override async Task OnInitializedAsync()
     {
+         
+        var userIdString = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+        if (!int.TryParse(userIdString, out var id))
+        {
+            Nav.NavigateTo("/");
+            return;
+        }
+        
+        userId = id;
+
+        var todosOsEventos = await ApiService.GetEventsAsync();
+        
         var type = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
         if (type != "Organizador")
         {
@@ -86,6 +98,9 @@
             return;
         }
 
-        Eventos = await ApiService.GetEventsAsync();
+        Eventos = todosOsEventos
+            .Where(e => e.OrganizerId == userId)
+            .ToList();
+        
     }
 }
