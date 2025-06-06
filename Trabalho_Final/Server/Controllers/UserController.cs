@@ -115,5 +115,25 @@ namespace Server.Controllers
 
             return Ok(result);
         }
+        [HttpGet("participants")]
+        public async Task<IActionResult> GetParticipants()
+        {
+            var participants = await _context.Users
+                .Where(u => u.UserType == "Participante")
+                .Select(u => new UserDto
+                {
+                    Id = u.Id,
+                    Name = u.Name,
+                    PhoneNumber = u.PhoneNumber,
+                    UserType = u.UserType,
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    Password = u.PasswordHash
+                })
+                .ToListAsync();
+
+            return Ok(participants);
+        }
+
     }
 }
