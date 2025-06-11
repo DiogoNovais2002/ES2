@@ -3,65 +3,75 @@
 @inject ApiService ApiService
 
 <div class="container py-5">
-  <h3 class="mb-4">Relatório Geral de Eventos</h3>
+    <div class="text-center mb-4">
+        <h1 class="fw-bold display-6">📊 Relatório Geral de Eventos</h1>
+    </div>
 
-  @if (report == null)
-  {
-      <p>Carregando relatório...</p>
-  }
-  else
-  {
-      <div class="card shadow-sm mx-auto" style="max-width: 1000px;">
-        <div class="card-body p-4">
-
-          @* Dados principais em duas colunas *@
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <p><strong>Total de eventos:</strong> @report.TotalEventos</p>
-              <p><strong>Evento mais caro:</strong> @report.EventoMaisCaro</p>
-              <p><strong>Mais participantes:</strong> @report.EventoComMaisParticipantes</p>
-            </div>
-            <div class="col-md-6">
-              <p><strong>Mais atividades:</strong> @report.EventoComMaisAtividades</p>
-              <p><strong>Mais longo:</strong> @report.EventoMaisLongo</p>
-              <p><strong>Média de participantes por evento:</strong> @($"{report.MediaParticipantes:F2}")</p>
-            </div>
-          </div>
-
-          <hr />
-
-          @* Categorias e Localidades lado a lado *@
-          <div class="row">
-            <div class="col-md-6">
-              <h5 class="mb-3">Categorias</h5>
-              <ul class="list-group list-group-flush">
-                @foreach (var cat in report.Categorias)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                      @cat.Key
-                      <span class="badge bg-primary rounded-pill">@cat.Value</span>
-                    </li>
-                }
-              </ul>
-            </div>
-
-            <div class="col-md-6">
-              <h5 class="mb-3">Localidades</h5>
-              <ul class="list-group list-group-flush">
-                @foreach (var loc in report.Localidades)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                      @loc.Key
-                      <span class="badge bg-secondary rounded-pill">@loc.Value</span>
-                    </li>
-                }
-              </ul>
-            </div>
-          </div>
-
+    @if (report == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Carregando relatório...</p>
         </div>
-      </div>
-  }
+    }
+    else
+    {
+        <div class="card shadow-sm mx-auto" style="max-width: 1000px;">
+            <div class="card-body p-4">
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-3">📌 Dados Principais</h5>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Total de eventos:</strong> <span>@report.TotalEventos</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Evento mais caro:</strong> <span>@report.EventoMaisCaro</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Mais participantes:</strong> <span>@report.EventoComMaisParticipantes</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Mais atividades:</strong> <span>@report.EventoComMaisAtividades</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Mais longo:</strong> <span>@report.EventoMaisLongo</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <strong>Média participantes/evento:</strong> <span>@($"{report.MediaParticipantes:F2}")</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="mb-3">📂 Categorias</h5>
+                        <ul class="list-group list-group-flush mb-4">
+                            @foreach (var cat in report.Categorias)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    @cat.Key
+                                    <span class="badge bg-primary rounded-pill">@cat.Value</span>
+                                </li>
+                            }
+                        </ul>
+
+                        <h5 class="mb-3">📍 Localidades</h5>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var loc in report.Localidades)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    @loc.Key
+                                    <span class="badge bg-info rounded-pill">@loc.Value</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
 </div>
 
 @code {
@@ -72,4 +82,3 @@
         report = await ApiService.GetRelatorioEventosAsync();
     }
 }
-

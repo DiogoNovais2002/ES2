@@ -5,7 +5,9 @@
 @inject IJSRuntime JS
 
 <div class="edit-profile-container">
-    <h2 class="page-title">Editar Perfil</h2>
+    <div class="text-center mb-4">
+        <h1 class="fw-bold display-6">🪪 Editar Perfil</h1>
+    </div>
 
     @if (Sucesso)
     {
@@ -17,15 +19,15 @@
     }
 
     <EditForm Model="@UserUpdate" OnValidSubmit="HandleValidSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>
 
         <div class="card form-card">
             <div class="form-group">
                 <label>Nome:</label>
                 <div class="input-wrapper">
                     <i class="fas fa-user icon-left"></i>
-                    <InputText @bind-Value="UserUpdate.Name" class="form-control" />
+                    <InputText @bind-Value="UserUpdate.Name" class="form-control"/>
                 </div>
             </div>
 
@@ -33,7 +35,7 @@
                 <label>E-mail:</label>
                 <div class="input-wrapper">
                     <i class="fas fa-envelope icon-left"></i>
-                    <InputText @bind-Value="UserUpdate.Email" class="form-control" placeholder="exemplo@dominio.com" />
+                    <InputText @bind-Value="UserUpdate.Email" class="form-control" placeholder="exemplo@dominio.com"/>
                 </div>
             </div>
 
@@ -42,7 +44,7 @@
                 <label>Número de Telefone:</label>
                 <div class="input-wrapper">
                     <i class="fas fa-phone icon-left"></i>
-                    <InputText @bind-Value="UserUpdate.PhoneNumber" class="form-control" />
+                    <InputText @bind-Value="UserUpdate.PhoneNumber" class="form-control"/>
                 </div>
             </div>
 
@@ -50,7 +52,7 @@
                 <label>Nova Senha (opcional):</label>
                 <div class="input-wrapper">
                     <i class="fas fa-lock icon-left"></i>
-                    <InputText type="password" @bind-Value="UserUpdate.Password" class="form-control" />
+                    <InputText type="password" @bind-Value="UserUpdate.Password" class="form-control"/>
                 </div>
             </div>
 
@@ -214,8 +216,8 @@
         }
     }
 
-    private void Cancelar()
+    private async Task Cancelar()
     {
-        NavigationManager.NavigateTo("/");
+        await JS.InvokeVoidAsync("history.back");
     }
 }

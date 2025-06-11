@@ -2,38 +2,54 @@
 @using Client.Services
 @inject ApiService ApiService
 
-<h3>Lista de Participantes</h3>
+<div class="container py-5">
+    <div class="text-center mb-4">
+        <h1 class="fw-bold display-6">👥 Lista de Participantes</h1>
+    </div>
 
-@if (participants == null)
-{
-    <p><em>Carregando participantes...</em></p>
-}
-else if (!participants.Any())
-{
-    <p>Nenhum participante encontrado.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Telefone</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var p in participants)
-        {
-            <tr>
-                <td>@p.Name</td>
-                <td>@p.Email</td>
-                <td>@p.PhoneNumber</td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title mb-3">Participantes Registados</h4>
+
+            @if (participants == null)
+            {
+                <div class="alert alert-secondary" role="alert">
+                    ⏳ A carregar participantes...
+                </div>
+            }
+            else if (!participants.Any())
+            {
+                <div class="alert alert-warning" role="alert">
+                    ⚠️ Nenhum participante encontrado.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Telefone</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var p in participants)
+                        {
+                            <tr>
+                                <td>@p.Name</td>
+                                <td>@p.Email</td>
+                                <td>@p.PhoneNumber</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
 
 @code {
     private List<ApiService.UserDto>? participants;
