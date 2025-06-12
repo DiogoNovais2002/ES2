@@ -1,6 +1,8 @@
 @page "/event-detail-report"
 @using Client.Services
 @inject ApiService ApiService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
 
 <div class="container py-5">
     <div class="text-center mb-4">
@@ -92,7 +94,21 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _events = await ApiService.GetEventsAsync();
+        var tipo = await JS.InvokeAsync<string>("localStorage.getItem", "userType");
+        if (!string.Equals(tipo, "Organizador", StringComparison.OrdinalIgnoreCase))
+        {
+            Nav.NavigateTo("/");
+            return;
+        }
+
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "authToken");
+        ApiService.SetAuthToken(token);
+
+        var userIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+        if (int.TryParse(userIdStr, out int organizerId))
+        {
+            _events = await ApiService.GetEventsByOrganizerAsync(organizerId);
+        }
     }
 
     private async Task OnEventChanged(ChangeEventArgs e)

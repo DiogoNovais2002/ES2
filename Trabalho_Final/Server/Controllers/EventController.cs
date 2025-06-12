@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.DTO;
@@ -21,7 +22,6 @@ namespace Server.Controllers
             _context = context;
         }
 
-        // GET /api/Event/{id}
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetEventById(int id)
@@ -33,7 +33,6 @@ namespace Server.Controllers
             return Ok(eventDto);
         }
 
-        // GET /api/Event
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetEvents()
@@ -42,20 +41,14 @@ namespace Server.Controllers
             return Ok(events);
         }
 
-        // POST /api/Event
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> CreateEvent([FromBody] EventDto eventDto)
         {
             var eventId = await _service.CreateAsync(eventDto);
-            return Ok(new
-            {
-                message = "Evento criado com sucesso!",
-                eventId
-            });
+            return Ok(new { message = "Evento criado com sucesso!", eventId });
         }
 
-        // PUT /api/Event/{id}
         [HttpPut("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> UpdateEventAsync(int id, [FromBody] EventDto evento)
@@ -67,7 +60,6 @@ namespace Server.Controllers
             return Ok(new { message = "Evento atualizado com sucesso!" });
         }
 
-        // DELETE participação: DELETE /api/Event/{eventId}/participants/{userId}
         [HttpDelete("{eventId}/participants/{userId}")]
         [AllowAnonymous]
         public async Task<IActionResult> CancelParticipation(int eventId, int userId)
@@ -79,7 +71,6 @@ namespace Server.Controllers
             return Ok(new { message = "Participação cancelada com sucesso." });
         }
 
-        // POST participação: POST /api/Event/participate
         [HttpPost("participate")]
         [AllowAnonymous]
         public async Task<IActionResult> Participate([FromBody] RegistrationDto registrationDto)
@@ -91,7 +82,6 @@ namespace Server.Controllers
             return Ok(new { message = result.Message });
         }
 
-        // GET /api/Event/participant/{userId}
         [HttpGet("participant/{userId}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetEventsByParticipant(int userId)
@@ -103,15 +93,13 @@ namespace Server.Controllers
             return Ok(events);
         }
 
-        // ✅ NOVO ENDPOINT: /api/Event/participant/{userId}/registrations
         [HttpGet("participant/{userId}/registrations")]
         [AllowAnonymous]
         public async Task<IActionResult> GetRegistrationsWithTickets(int userId)
         {
             var registrations = await _context.Registrations
                 .Where(r => r.UserId == userId)
-                .Include(r => r.Event)
-                .ThenInclude(e => e.Activities)
+                .Include(r => r.Event).ThenInclude(e => e.Activities)
                 .Include(r => r.Ticket)
                 .Select(r => new
                 {
@@ -135,8 +123,6 @@ namespace Server.Controllers
             return Ok(registrations);
         }
 
-
-        // GET /api/Event/categories
         [HttpGet("categories")]
         [AllowAnonymous]
         public async Task<ActionResult<List<string>>> GetCategories()
@@ -145,7 +131,6 @@ namespace Server.Controllers
             return Ok(categories);
         }
 
-        // GET /api/Event/localidades
         [HttpGet("localidades")]
         [AllowAnonymous]
         public async Task<ActionResult<List<string>>> GetLocalidades()
@@ -154,7 +139,6 @@ namespace Server.Controllers
             return Ok(localidades);
         }
 
-        // GET /api/Event/datas
         [HttpGet("datas")]
         [AllowAnonymous]
         public async Task<ActionResult<List<string>>> GetDatas()
@@ -163,7 +147,6 @@ namespace Server.Controllers
             return Ok(datas);
         }
 
-        // GET /api/Event/EventReport?organizerId=123
         [HttpGet("EventReport")]
         [AllowAnonymous]
         public async Task<IActionResult> GetGeneralReport([FromQuery] int organizerId)
@@ -172,19 +155,41 @@ namespace Server.Controllers
             return Ok(report);
         }
 
-
-        // GET /api/Event/EventReport/{eventId}
         [HttpGet("EventReport/{eventId:int}")]
-        [AllowAnonymous]
+        [AllowAnonymous] // alterado para funcionar sem autenticação JWT
         public async Task<IActionResult> GetReportByEvent(int eventId)
         {
-            var detail = await _service.GetReportByEventAsync(eventId);
-            if (detail == null)
+            var evento = await _context.Events.FindAsync(eventId);
+            if (evento == null)
                 return NotFound(new { message = "Evento não encontrado." });
 
+            var detail = await _service.GetReportByEventAsync(eventId);
             return Ok(detail);
         }
-        
+
+        [HttpGet("organizer/{organizerId}")]
+        [AllowAnonymous] // alterado para funcionar sem autenticação JWT
+        public async Task<IActionResult> GetEventsByOrganizer(int organizerId)
+        {
+            var events = await _context.Events
+                .Where(e => e.OrganizerId == organizerId)
+                .Select(e => new EventDto
+                {
+                    Id = e.Id,
+                    Name = e.Name,
+                    Description = e.Description,
+                    EventStartDate = e.EventStartDate,
+                    EventEndDate = e.EventEndDate,
+                    Location = e.Location,
+                    Capacity = e.Capacity,
+                    Category = e.Category,
+                    OrganizerId = e.OrganizerId
+                })
+                .ToListAsync();
+
+            return Ok(events);
+        }
+
         [HttpGet("{eventId}/participants")]
         [AllowAnonymous]
         public async Task<IActionResult> GetParticipantsByEvent(int eventId)

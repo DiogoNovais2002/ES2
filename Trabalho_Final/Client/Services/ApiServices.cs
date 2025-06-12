@@ -78,6 +78,17 @@ public class ApiService
         return await _httpClient
             .GetFromJsonAsync<EventDetailReportDto>($"api/Event/EventReport/{eventId}");
     }
+    public async Task<List<EventDto>> GetEventsByOrganizerAsync(int organizerId)
+    {
+        var response = await _httpClient.GetAsync($"api/Event/organizer/{organizerId}");
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<List<EventDto>>();
+            return result ?? new List<EventDto>();
+        }
+
+        return new List<EventDto>();
+    }
 
     
     public async Task<bool> CancelarParticipacaoAsync(int userId, int eventId)
