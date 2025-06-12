@@ -1,6 +1,8 @@
 @page "/EventReport"
 @using Client.Services
 @inject ApiService ApiService
+@inject IJSRuntime JS
+
 
 <div class="container py-5">
     <div class="text-center mb-4">
@@ -79,6 +81,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        report = await ApiService.GetRelatorioEventosAsync();
+        var userIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+
+        if (int.TryParse(userIdStr, out int organizerId))
+        {
+            report = await ApiService.GetRelatorioEventosDoOrganizadorAsync(organizerId);
+        }
     }
 }

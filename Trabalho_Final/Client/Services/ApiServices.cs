@@ -67,11 +67,12 @@ public class ApiService
 
         return new List<EventDto>();
     }
-    public async Task<EventReportDto> GetRelatorioEventosAsync()
+    public async Task<EventReportDto> GetRelatorioEventosDoOrganizadorAsync(int organizerId)
     {
-        var response = await _httpClient.GetFromJsonAsync<EventReportDto>("api/Event/EventReport");
-        return response!;
+        var response = await _httpClient.GetFromJsonAsync<EventReportDto>($"api/Event/EventReport?organizerId={organizerId}");
+        return response ?? new EventReportDto();
     }
+
     public async Task<EventDetailReportDto?> GetRelatorioEventoAsync(int eventId)
     {
         return await _httpClient

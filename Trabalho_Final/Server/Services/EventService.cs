@@ -175,31 +175,41 @@ namespace Server.Services
                 Category = e.Category
             };
         }
-        public async Task<EventReportDto> GetReportAsync()
+        public async Task<EventReportDto> GetReportAsync(int organizerId)
         {
-            var eventos = await _context.Events.ToListAsync();
-            var registros = await _context.Registrations.ToListAsync();
-            var atividades = await _context.Activities.ToListAsync(); 
+            var eventos = await _context.Events
+                .Where(e => e.OrganizerId == organizerId)
+                .ToListAsync();
 
-            var report = new EventReportDto
+            var eventIds = eventos.Select(e => e.Id).ToList();
+
+            var registros = await _context.Registrations
+                .Where(r => eventIds.Contains(r.EventId))
+                .ToListAsync();
+
+            var atividades = await _context.Activities
+                .Where(a => eventIds.Contains(a.EventId))
+                .ToListAsync();
+
+            return new EventReportDto
             {
                 TotalEventos = eventos.Count,
-                EventoMaisCaro = eventos.OrderByDescending(e => e.Capacity).FirstOrDefault()?.Name,
+                EventoMaisCaro = eventos.OrderByDescending(e => e.Capacity).FirstOrDefault()?.Name ?? "",
                 EventoComMaisParticipantes = registros
                     .GroupBy(r => r.EventId)
                     .OrderByDescending(g => g.Count())
                     .Join(eventos, g => g.Key, e => e.Id, (g, e) => e.Name)
-                    .FirstOrDefault(),
+                    .FirstOrDefault() ?? "",
 
                 EventoComMaisAtividades = atividades
                     .GroupBy(a => a.EventId)
                     .OrderByDescending(g => g.Count())
                     .Join(eventos, g => g.Key, e => e.Id, (g, e) => e.Name)
-                    .FirstOrDefault(),
+                    .FirstOrDefault() ?? "",
 
                 EventoMaisLongo = eventos
                     .OrderByDescending(e => (e.EventEndDate - e.EventStartDate).TotalHours)
-                    .FirstOrDefault()?.Name,
+                    .FirstOrDefault()?.Name ?? "",
 
                 MediaParticipantes = eventos.Count > 0
                     ? registros.Count / (double)eventos.Count
@@ -211,13 +221,10 @@ namespace Server.Services
 
                 Localidades = eventos
                     .GroupBy(e => e.Location)
-                    .ToDictionary(g => g.Key ?? "Sem localidade", g => g.Count()),
-
+                    .ToDictionary(g => g.Key ?? "Sem localidade", g => g.Count())
             };
-
-            return report;
         }
-        
+
         public async Task<EventDetailReportDto?> GetReportByEventAsync(int eventId)
         {
             var ev = await _context.Events

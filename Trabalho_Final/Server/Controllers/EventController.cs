@@ -163,14 +163,15 @@ namespace Server.Controllers
             return Ok(datas);
         }
 
-        // GET /api/Event/EventReport
+        // GET /api/Event/EventReport?organizerId=123
         [HttpGet("EventReport")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetGeneralReport()
+        public async Task<IActionResult> GetGeneralReport([FromQuery] int organizerId)
         {
-            var report = await _service.GetReportAsync();
+            var report = await _service.GetReportAsync(organizerId);
             return Ok(report);
         }
+
 
         // GET /api/Event/EventReport/{eventId}
         [HttpGet("EventReport/{eventId:int}")]
